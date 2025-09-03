@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { CachedLiveChannels,EpisodeSkipConfig, Favorite, IStorage, LiveConfig, PlayRecord } from './types';
 
 /**
  * LocalStorage 存储实现
@@ -383,6 +383,84 @@ export class LocalStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting user:', error);
       throw error;
+    }
+  }
+
+  // ---------- 直播源配置 ----------
+  async getLiveConfigs(): Promise<LiveConfig[]> {
+    if (typeof window === 'undefined') return [];
+    
+    try {
+      const data = localStorage.getItem('katelyatv_live_configs');
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error getting live configs:', error);
+      return [];
+    }
+  }
+
+  async setLiveConfigs(configs: LiveConfig[]): Promise<void> {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      localStorage.setItem('katelyatv_live_configs', JSON.stringify(configs));
+    } catch (error) {
+      console.error('Error setting live configs:', error);
+    }
+  }
+
+  // ---------- 直播频道缓存 ----------
+  async getCachedLiveChannels(sourceKey: string): Promise<CachedLiveChannels[string] | null> {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const storageKey = `katelyatv_live_cache_${sourceKey}`;
+      const data = localStorage.getItem(storageKey);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Error getting cached live channels:', error);
+      return null;
+    }
+  }
+
+  async setCachedLiveChannels(sourceKey: string, data: CachedLiveChannels[string]): Promise<void> {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const storageKey = `katelyatv_live_cache_${sourceKey}`;
+      localStorage.setItem(storageKey, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error setting cached live channels:', error);
+    }
+  }
+
+  async deleteCachedLiveChannels(sourceKey: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const storageKey = `katelyatv_live_cache_${sourceKey}`;
+      localStorage.removeItem(storageKey);
+    } catch (error) {
+      console.error('Error deleting cached live channels:', error);
+    }
+  }
+
+  async clearAllCachedLiveChannels(): Promise<void> {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const keysToRemove: string[] = [];
+      
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('katelyatv_live_cache_')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Error clearing all cached live channels:', error);
     }
   }
 }

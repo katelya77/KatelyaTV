@@ -1,6 +1,6 @@
 import { Clover, Film, Home, Search, Tv } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import { BackButton } from './BackButton';
@@ -19,25 +19,14 @@ interface PageLayoutProps {
 const TopNavbar = ({ activePath = '/' }: { activePath?: string }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { siteName } = useSite();
 
   const [active, setActive] = useState(activePath);
 
   useEffect(() => {
-    // 优先使用传入的 activePath
-    if (activePath) {
-      setActive(activePath);
-    } else {
-      // 否则使用当前路径
-      const getCurrentFullPath = () => {
-        const queryString = searchParams.toString();
-        return queryString ? `${pathname}?${queryString}` : pathname;
-      };
-      const fullPath = getCurrentFullPath();
-      setActive(fullPath);
-    }
-  }, [activePath, pathname, searchParams]);
+    // 优先使用传入的 activePath，否则使用当前路径
+    setActive(activePath || pathname);
+  }, [activePath, pathname]);
 
   const handleSearchClick = useCallback(() => {
     router.push('/search');

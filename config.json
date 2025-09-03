@@ -86,5 +86,13 @@
       "api": "https://zy.xmm.hk/api.php/provide/vod",
       "name": "小猫咪资源"
     }
+  },
+  "live_sources": {
+    "demo_live": {
+      "name": "示例直播源",
+      "url": "https://iptv-org.github.io/iptv/index.m3u",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+      "epg": ""
+    }
   }
 }

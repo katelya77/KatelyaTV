@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const nextConfig = {
-  output: 'standalone',
+  // For Cloudflare Pages, use 'export' instead of 'standalone'
+  output: process.env.CLOUDFLARE_PAGES === '1' ? 'export' : undefined,
+  
   eslint: {
     dirs: ['src'],
   },
