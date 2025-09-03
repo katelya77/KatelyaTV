@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronDown, ChevronUp, Settings, Users, Video } from 'lucide-react';
+import { ChevronDown, ChevronUp, Radio,Settings, Users, Video } from 'lucide-react';
 import { GripVertical } from 'lucide-react';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
@@ -1327,6 +1327,438 @@ const VideoSourceConfig = ({
   );
 };
 
+// 直播源配置组件
+const LiveSourceConfig = ({ refreshConfig: _refreshConfig }: { refreshConfig: () => Promise<void> }) => {
+  const [liveSources, setLiveSources] = useState<any[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedSources, setSelectedSources] = useState<Set<string>>(new Set());
+  const [newSource, setNewSource] = useState({
+    key: '',
+    name: '',
+    url: '',
+    ua: '',
+    epg: '',
+  });
+
+  // 获取直播源列表
+  const fetchLiveSources = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/live');
+      if (response.ok) {
+        const result = await response.json();
+        setLiveSources(result.data || []);
+      } else {
+        showError('获取直播源失败');
+      }
+    } catch (error) {
+      showError('获取直播源失败');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveSources();
+  }, [fetchLiveSources]);
+
+  // 调用直播源API
+  const callLiveSourceApi = async (data: any) => {
+    const response = await fetch('/api/admin/live', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '操作失败');
+    }
+
+    const result = await response.json();
+    await fetchLiveSources();
+    return result;
+  };
+
+  // 添加直播源
+  const handleAddSource = async () => {
+    if (!newSource.key || !newSource.name || !newSource.url) {
+      showError('请填写完整信息');
+      return;
+    }
+
+    try {
+      await callLiveSourceApi({
+        action: 'add',
+        ...newSource,
+      });
+      
+      setNewSource({ key: '', name: '', url: '', ua: '', epg: '' });
+      setShowAddForm(false);
+      showSuccess('添加成功');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : '添加失败');
+    }
+  };
+
+  // 删除直播源
+  const handleDelete = async (key: string) => {
+    const source = liveSources.find(s => s.key === key);
+    if (source?.from === 'config') {
+      showError('示例源不可删除，这些源用于演示功能');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: '确认删除',
+      text: '确定要删除这个直播源吗？',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await callLiveSourceApi({ action: 'delete', key });
+        showSuccess('删除成功');
+      } catch (error) {
+        showError(error instanceof Error ? error.message : '删除失败');
+      }
+    }
+  };
+
+  // 切换启用状态
+  const handleToggleEnable = async (key: string) => {
+    try {
+      await callLiveSourceApi({ action: 'toggle', key });
+      showSuccess('状态更新成功');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : '操作失败');
+    }
+  };
+
+  // 刷新频道数量
+  const handleRefresh = async (key?: string) => {
+    try {
+      setLoading(true);
+      await callLiveSourceApi({ action: 'refresh', key });
+      showSuccess(key ? '刷新成功' : '批量刷新完成');
+    } catch (error) {
+      showError(error instanceof Error ? error.message : '刷新失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 批量操作
+  const handleBatchDelete = async () => {
+    if (selectedSources.size === 0) {
+      showError('请先选择要删除的直播源');
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: '确认批量删除',
+      text: `即将删除 ${selectedSources.size} 个直播源，此操作不可撤销！`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+    });
+
+    if (!result.isConfirmed) return;
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const key of Array.from(selectedSources)) {
+      try {
+        await callLiveSourceApi({ action: 'delete', key });
+        successCount++;
+      } catch (error) {
+        errorCount++;
+      }
+    }
+
+    if (errorCount === 0) {
+      showSuccess(`成功删除 ${successCount} 个直播源`);
+      setSelectedSources(new Set());
+      setBatchMode(false);
+    } else {
+      showError(`删除完成：成功 ${successCount} 个，失败 ${errorCount} 个`);
+    }
+  };
+
+  // 选择处理
+  const handleSourceSelect = (key: string, checked: boolean) => {
+    const source = liveSources.find(s => s.key === key);
+    if (source?.from === 'config') return; // 示例源不可选择
+
+    setSelectedSources(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(key);
+      } else {
+        newSet.delete(key);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // 只选择可删除的源（排除示例源）
+      const selectableKeys = liveSources
+        .filter(source => source.from !== 'config')
+        .map(source => source.key);
+      setSelectedSources(new Set(selectableKeys));
+    } else {
+      setSelectedSources(new Set());
+    }
+  };
+
+  if (loading && liveSources.length === 0) {
+    return <div className="text-center text-gray-500">加载中...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 工具栏 */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          直播源列表
+        </h4>
+        
+        <div className="flex items-center gap-2 flex-wrap">
+          {!batchMode ? (
+            <>
+              <button
+                onClick={() => setBatchMode(true)}
+                className="inline-flex items-center px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
+              >
+                ☑️ 批量选择
+              </button>
+              
+              <button
+                onClick={() => handleRefresh()}
+                disabled={loading}
+                className="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-sm rounded-lg transition-colors"
+              >
+                🔄 批量刷新
+              </button>
+              
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-lg transition-colors"
+              >
+                {showAddForm ? '取消' : '➕ 添加'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => { setBatchMode(false); setSelectedSources(new Set()); }}
+                className="inline-flex items-center px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+              >
+                ❌ 退出批量
+              </button>
+              
+              <div className="flex items-center gap-1 border-l border-gray-300 pl-2">
+                <span className="text-xs text-gray-500">
+                  已选 {selectedSources.size} 个
+                </span>
+                
+                <button
+                  onClick={handleBatchDelete}
+                  disabled={selectedSources.size === 0}
+                  className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white text-sm rounded-lg transition-colors"
+                >
+                  🗑️ 批量删除
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 添加表单 */}
+      {showAddForm && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="标识 (key)"
+              value={newSource.key}
+              onChange={(e) => setNewSource(prev => ({ ...prev, key: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+            <input
+              type="text"
+              placeholder="名称"
+              value={newSource.name}
+              onChange={(e) => setNewSource(prev => ({ ...prev, name: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+            <input
+              type="text"
+              placeholder="M3U/M3U8 地址"
+              value={newSource.url}
+              onChange={(e) => setNewSource(prev => ({ ...prev, url: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 sm:col-span-2"
+            />
+            <input
+              type="text"
+              placeholder="User-Agent (可选)"
+              value={newSource.ua}
+              onChange={(e) => setNewSource(prev => ({ ...prev, ua: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+            <input
+              type="text"
+              placeholder="EPG 地址 (可选)"
+              value={newSource.epg}
+              onChange={(e) => setNewSource(prev => ({ ...prev, epg: e.target.value }))}
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            />
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={handleAddSource}
+              disabled={!newSource.key || !newSource.name || !newSource.url}
+              className="w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
+            >
+              添加
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 直播源表格 */}
+      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900">
+            <tr>
+              {batchMode && (
+                <th className="w-12 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedSources.size > 0 && selectedSources.size === liveSources.filter(s => s.from !== 'config').length}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                </th>
+              )}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                名称
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                标识
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                频道数
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                状态
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                操作
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {liveSources.map((source) => (
+              <tr key={source.key} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                {batchMode && (
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedSources.has(source.key)}
+                      onChange={(e) => handleSourceSelect(source.key, e.target.checked)}
+                      disabled={source.from === 'config'}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
+                    />
+                  </td>
+                )}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <span>{source.name}</span>
+                    {source.from === 'config' && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                        示例源
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                  {source.key}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                  <div className="flex items-center space-x-2">
+                    <span>{source.channelNumber || 0}</span>
+                    <button
+                      onClick={() => handleRefresh(source.key)}
+                      disabled={loading}
+                      className="text-blue-600 hover:text-blue-700 text-xs"
+                      title="刷新频道数量"
+                    >
+                      🔄
+                    </button>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    !source.disabled
+                      ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
+                      : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300'
+                  }`}>
+                    {!source.disabled ? '启用中' : '已禁用'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                  <button
+                    onClick={() => handleToggleEnable(source.key)}
+                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${
+                      !source.disabled
+                        ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                        : 'bg-green-100 text-green-800 hover:bg-green-200'
+                    } transition-colors`}
+                  >
+                    {!source.disabled ? '禁用' : '启用'}
+                  </button>
+                  
+                  {source.from !== 'config' ? (
+                    <button
+                      onClick={() => handleDelete(source.key)}
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                    >
+                      删除
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-gray-200 text-gray-500">
+                      不可删除
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {liveSources.length === 0 && (
+        <div className="text-center text-gray-500 py-8">
+          暂无直播源配置
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 新增站点配置组件
+
 // 新增站点配置组件
 const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
   const [siteSettings, setSiteSettings] = useState<SiteConfig>({
@@ -1616,6 +2048,7 @@ function AdminPageClient() {
   const [expandedTabs, setExpandedTabs] = useState<{ [key: string]: boolean }>({
     userConfig: false,
     videoSource: false,
+    liveSource: false,
     siteConfig: false,
   });
 
@@ -1772,6 +2205,18 @@ function AdminPageClient() {
               onToggle={() => toggleTab('videoSource')}
             >
               <VideoSourceConfig config={config} refreshConfig={fetchConfig} />
+            </CollapsibleTab>
+
+            {/* 直播源配置标签 */}
+            <CollapsibleTab
+              title='直播源配置'
+              icon={
+                <Radio size={20} className='text-gray-600 dark:text-gray-400' />
+              }
+              isExpanded={expandedTabs.liveSource}
+              onToggle={() => toggleTab('liveSource')}
+            >
+              <LiveSourceConfig refreshConfig={fetchConfig} />
             </CollapsibleTab>
           </div>
         </div>

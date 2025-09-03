@@ -23,6 +23,17 @@ export interface AdminConfig {
     from: 'config' | 'custom';
     disabled?: boolean;
   }[];
+  LiveConfig?: {
+    key: string;
+    name: string;
+    url: string;
+    ua?: string;
+    epg?: string;
+    from: 'config' | 'custom';
+    channelNumber: number;
+    disabled: boolean;
+    order?: number;
+  }[];
 }
 
 export interface AdminConfigResult {

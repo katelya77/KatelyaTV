@@ -1,0 +1,19 @@
+name = "katelyatv"
+compatibility_date = "2024-09-01"
+pages_build_output_dir = "out"
+
+[env.production]
+vars = { STORAGE_TYPE = "d1" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "katelyatv-production"
+database_id = "" # Production
+
+[env.preview]
+vars = { STORAGE_TYPE = "d1" }
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "katelyatv-preview"
+database_id = "" # Preview

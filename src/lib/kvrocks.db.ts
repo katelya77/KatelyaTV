@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { CachedLiveChannels,EpisodeSkipConfig, Favorite, IStorage, LiveConfig, PlayRecord } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -336,6 +336,50 @@ export class KvrocksStorage implements IStorage {
     await withRetry(() =>
       this.client.set(this.adminConfigKey(), JSON.stringify(config))
     );
+  }
+
+  // ---------- 直播源配置 ----------
+  private liveConfigsKey(): string {
+    return 'live_configs';
+  }
+
+  async getLiveConfigs(): Promise<LiveConfig[]> {
+    const data = await withRetry(() => this.client.get(this.liveConfigsKey()));
+    return data ? JSON.parse(data) : [];
+  }
+
+  async setLiveConfigs(configs: LiveConfig[]): Promise<void> {
+    await withRetry(() =>
+      this.client.set(this.liveConfigsKey(), JSON.stringify(configs))
+    );
+  }
+
+  // ---------- 直播频道缓存 ----------
+  private liveCacheKey(sourceKey: string): string {
+    return `live_cache:${sourceKey}`;
+  }
+
+  async getCachedLiveChannels(sourceKey: string): Promise<CachedLiveChannels[string] | null> {
+    const data = await withRetry(() => this.client.get(this.liveCacheKey(sourceKey)));
+    return data ? JSON.parse(data) : null;
+  }
+
+  async setCachedLiveChannels(sourceKey: string, data: CachedLiveChannels[string]): Promise<void> {
+    await withRetry(() =>
+      this.client.set(this.liveCacheKey(sourceKey), JSON.stringify(data))
+    );
+  }
+
+  async deleteCachedLiveChannels(sourceKey: string): Promise<void> {
+    await withRetry(() => this.client.del(this.liveCacheKey(sourceKey)));
+  }
+
+  async clearAllCachedLiveChannels(): Promise<void> {
+    const pattern = 'live_cache:*';
+    const keys = await withRetry(() => this.client.keys(pattern));
+    if (keys.length > 0) {
+      await withRetry(() => this.client.del(keys));
+    }
   }
 }
 

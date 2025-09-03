@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { CachedLiveChannels,EpisodeSkipConfig, Favorite, IStorage, LiveConfig, PlayRecord } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -38,8 +38,12 @@ interface D1ExecResult {
 }
 
 // 获取全局D1数据库实例
-function getD1Database(): D1Database {
-  return (process.env as any).DB as D1Database;
+function getD1Database(): D1Database | null {
+  const db = (process.env as any).DB as D1Database;
+  if (!db && process.env.NODE_ENV !== 'development') {
+    console.warn('D1 database not available in build environment');
+  }
+  return db || null;
 }
 
 export class D1Storage implements IStorage {
@@ -48,6 +52,9 @@ export class D1Storage implements IStorage {
   private async getDatabase(): Promise<D1Database> {
     if (!this.db) {
       this.db = getD1Database();
+      if (!this.db) {
+        throw new Error('D1 database not available. Make sure DB is properly configured.');
+      }
     }
     return this.db;
   }
@@ -570,6 +577,135 @@ export class D1Storage implements IStorage {
         .run();
     } catch (err) {
       console.error('Failed to delete skip config:', err);
+      throw err;
+    }
+  }
+
+  // ---------- 直播源配置 ----------
+  async getLiveConfigs(): Promise<LiveConfig[]> {
+    try {
+      const db = await this.getDatabase();
+      const result = await db
+        .prepare('SELECT * FROM live_configs ORDER BY order_index ASC')
+        .all<any>();
+
+      return result.results.map(row => ({
+        key: row.key,
+        name: row.name,
+        url: row.url,
+        ua: row.ua,
+        epg: row.epg,
+        from: row.from,
+        channelNumber: row.channel_number,
+        disabled: Boolean(row.disabled),
+        order: row.order_index,
+      }));
+    } catch (err) {
+      console.error('Failed to get live configs:', err);
+      return [];
+    }
+  }
+
+  async setLiveConfigs(configs: LiveConfig[]): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      
+      // 清空现有配置
+      await db.prepare('DELETE FROM live_configs').run();
+      
+      // 批量插入新配置
+      const statements = configs.map(config =>
+        db
+          .prepare(`
+            INSERT INTO live_configs 
+            (key, name, url, ua, epg, from_source, channel_number, disabled, order_index)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `)
+          .bind(
+            config.key,
+            config.name,
+            config.url,
+            config.ua || null,
+            config.epg || null,
+            config.from,
+            config.channelNumber,
+            config.disabled ? 1 : 0,
+            config.order || 0
+          )
+      );
+      
+      if (statements.length > 0) {
+        await db.batch(statements);
+      }
+    } catch (err) {
+      console.error('Failed to set live configs:', err);
+      throw err;
+    }
+  }
+
+  // ---------- 直播频道缓存 ----------
+  async getCachedLiveChannels(sourceKey: string): Promise<CachedLiveChannels[string] | null> {
+    try {
+      const db = await this.getDatabase();
+      const result = await db
+        .prepare('SELECT * FROM live_channel_cache WHERE source_key = ?')
+        .bind(sourceKey)
+        .first<any>();
+
+      if (!result) return null;
+
+      return {
+        channels: JSON.parse(result.channels),
+        updateTime: result.update_time,
+        expireTime: result.expire_time,
+      };
+    } catch (err) {
+      console.error('Failed to get cached live channels:', err);
+      return null;
+    }
+  }
+
+  async setCachedLiveChannels(sourceKey: string, data: CachedLiveChannels[string]): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db
+        .prepare(`
+          INSERT OR REPLACE INTO live_channel_cache 
+          (source_key, channels, update_time, expire_time)
+          VALUES (?, ?, ?, ?)
+        `)
+        .bind(
+          sourceKey,
+          JSON.stringify(data.channels),
+          data.updateTime,
+          data.expireTime
+        )
+        .run();
+    } catch (err) {
+      console.error('Failed to set cached live channels:', err);
+      throw err;
+    }
+  }
+
+  async deleteCachedLiveChannels(sourceKey: string): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db
+        .prepare('DELETE FROM live_channel_cache WHERE source_key = ?')
+        .bind(sourceKey)
+        .run();
+    } catch (err) {
+      console.error('Failed to delete cached live channels:', err);
+      throw err;
+    }
+  }
+
+  async clearAllCachedLiveChannels(): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db.prepare('DELETE FROM live_channel_cache').run();
+    } catch (err) {
+      console.error('Failed to clear all cached live channels:', err);
       throw err;
     }
   }
