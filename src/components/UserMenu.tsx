@@ -2,7 +2,7 @@
 
 'use client';
 
-import { KeyRound, LogOut, Settings, Shield, User, X } from 'lucide-react';
+import { KeyRound, LogOut, Settings, Shield, Tv, User, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -147,6 +147,11 @@ export const UserMenu: React.FC = () => {
 
   const handleAdminPanel = () => {
     router.push('/admin');
+  };
+
+  const handleTVBoxConfig = () => {
+    setIsOpen(false);
+    router.push('/config');
   };
 
   const handleChangePassword = () => {
@@ -361,6 +366,15 @@ export const UserMenu: React.FC = () => {
           >
             <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
             <span className='font-medium'>设置</span>
+          </button>
+
+          {/* TVBox配置按钮 */}
+          <button
+            onClick={handleTVBoxConfig}
+            className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
+          >
+            <Tv className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+            <span className='font-medium'>TVBox配置</span>
           </button>
 
           {/* 管理面板按钮 */}

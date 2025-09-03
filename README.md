@@ -43,6 +43,7 @@
 - **☁️ 多平台支持**：Vercel、Cloudflare Pages、传统服务器全兼容
 - **🔧 灵活配置**：支持自定义资源站、代理设置、主题配置
 - **📱 PWA 支持**：可安装为桌面/手机应用，离线缓存
+- **📺 TVBox 兼容**：支持 TVBox 配置接口，可导入到各种电视盒子应用
 
 ### 🎨 用户体验
 
@@ -62,6 +63,33 @@
 | 状态管理  | React Hooks · Context API                                                                             |
 | 代码质量  | ESLint · Prettier · Jest · Husky                                                                      |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
+
+## 📺 TVBox 兼容功能
+
+KatelyaTV 新增了 TVBox 配置接口，可以将您的视频源导入到各种电视盒子应用中使用：
+
+### ✨ 功能特点
+
+- **🔄 自动同步**：自动同步 KatelyaTV 中配置的所有视频源
+- **📋 标准格式**：支持 TVBox 标准 JSON 配置格式
+- **🎬 内置解析**：集成多个视频解析接口，支持主流视频平台
+- **🌐 跨域支持**：自动处理 CORS 跨域问题
+- **📱 多格式**：支持 JSON 和 Base64 两种配置格式
+
+### 🚀 快速使用
+
+1. **访问配置页面**：在 KatelyaTV 中点击侧边栏的"TVBox 配置"或访问 `/config` 页面
+2. **选择格式类型**：在页面中选择 JSON 或 Base64 格式
+3. **复制配置链接**：点击复制按钮获取配置链接
+4. **导入到 TVBox**：在 TVBox 应用中导入配置链接
+
+### 🔗 API 端点
+
+- **JSON 配置**：`https://your-domain.com/api/tvbox?format=json`
+- **Base64 配置**：`https://your-domain.com/api/tvbox?format=base64`
+- **视频解析**：`https://your-domain.com/api/parse?url={视频地址}`
+
+> 📖 详细使用说明请查看：[TVBox 配置指南](docs/TVBOX.md)
 
 ## 🚀 部署教程
 
