@@ -1,13 +1,5 @@
 {
-  "cache_time": 7200,
-  "api_site": {
-    "example_test": {
-      "api": "https://example.com/api.php/provide/vod",
-      "name": "示例视频源",
-      "detail": "https://example.com"
-    }
-  }
-}{
+
   "cache_time": 7200,
   "api_site": {
     "dyttzy": {
