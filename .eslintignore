@@ -49,5 +49,8 @@ manifest.json
 # Test coverage
 coverage/
 
+# Scripts (Node.js files with different linting rules)
+scripts/
+
 # Storybook build outputs
 storybook-static/

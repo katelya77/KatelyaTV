@@ -3,7 +3,7 @@
 import { Redis } from '@upstash/redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { CachedLiveChannels,EpisodeSkipConfig, Favorite, IStorage, LiveConfig, PlayRecord } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -328,6 +328,44 @@ export class UpstashRedisStorage implements IStorage {
       // 从用户的跳过配置集合中移除
       await this.client.srem(this.skipConfigsKey(userName), key);
     });
+  }
+
+  // ---------- 直播源配置 ----------
+  private liveConfigsKey(): string {
+    return 'live:configs';
+  }
+
+  async getLiveConfigs(): Promise<LiveConfig[]> {
+    const data = await withRetry(() => this.client.get(this.liveConfigsKey()));
+    return data ? (data as LiveConfig[]) : [];
+  }
+
+  async setLiveConfigs(configs: LiveConfig[]): Promise<void> {
+    await withRetry(() => this.client.set(this.liveConfigsKey(), configs));
+  }
+
+  // ---------- 直播频道缓存 ----------
+  private liveCacheKey(sourceKey: string): string {
+    return `live:cache:${sourceKey}`;
+  }
+
+  async getCachedLiveChannels(sourceKey: string): Promise<CachedLiveChannels[string] | null> {
+    const data = await withRetry(() => this.client.get(this.liveCacheKey(sourceKey)));
+    return data ? (data as CachedLiveChannels[string]) : null;
+  }
+
+  async setCachedLiveChannels(sourceKey: string, data: CachedLiveChannels[string]): Promise<void> {
+    await withRetry(() => this.client.set(this.liveCacheKey(sourceKey), data));
+  }
+
+  async deleteCachedLiveChannels(sourceKey: string): Promise<void> {
+    await withRetry(() => this.client.del(this.liveCacheKey(sourceKey)));
+  }
+
+  async clearAllCachedLiveChannels(): Promise<void> {
+    // Upstash Redis 不支持 KEYS 命令，我们采用不同的策略
+    // 这里我们简单地返回，实际应用中可以维护一个源key列表
+    console.warn('clearAllCachedLiveChannels: Upstash Redis does not support KEYS pattern, skipping...');
   }
 }
 

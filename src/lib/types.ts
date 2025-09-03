@@ -42,6 +42,37 @@ export interface Favorite {
   search_title: string; // 搜索时使用的标题
 }
 
+// 直播频道数据结构
+export interface LiveChannel {
+  name: string; // 频道名称
+  url: string; // 播放地址
+  logo?: string; // 频道logo
+  group?: string; // 频道分组
+  epg_id?: string; // EPG节目单ID
+}
+
+// 直播源配置数据结构
+export interface LiveConfig {
+  key: string; // 唯一标识
+  name: string; // 直播源名称
+  url: string; // M3U/M3U8地址
+  ua?: string; // User-Agent
+  epg?: string; // 电子节目单URL
+  from: 'config' | 'custom'; // 来源：配置文件或自定义
+  channelNumber: number; // 频道数量
+  disabled: boolean; // 启用状态
+  order?: number; // 排序
+}
+
+// 缓存的直播频道数据
+export interface CachedLiveChannels {
+  [sourceKey: string]: {
+    channels: LiveChannel[];
+    updateTime: number; // 缓存时间
+    expireTime: number; // 过期时间
+  };
+}
+
 // 存储接口
 export interface IStorage {
   // 播放记录相关
@@ -87,6 +118,16 @@ export interface IStorage {
   // 管理员配置相关
   getAdminConfig(): Promise<AdminConfig | null>;
   setAdminConfig(config: AdminConfig): Promise<void>;
+
+  // 直播源相关
+  getLiveConfigs(): Promise<LiveConfig[]>;
+  setLiveConfigs(configs: LiveConfig[]): Promise<void>;
+  
+  // 直播频道缓存相关
+  getCachedLiveChannels(sourceKey: string): Promise<CachedLiveChannels[string] | null>;
+  setCachedLiveChannels(sourceKey: string, data: CachedLiveChannels[string]): Promise<void>;
+  deleteCachedLiveChannels(sourceKey: string): Promise<void>;
+  clearAllCachedLiveChannels(): Promise<void>;
 }
 
 // 搜索结果数据结构
