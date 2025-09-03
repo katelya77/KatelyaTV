@@ -6,7 +6,7 @@ import { LiveConfig } from '@/lib/types';
 
 // 针对不同部署模式的配置
 export const runtime = process.env.CLOUDFLARE_PAGES === '1' ? 'edge' : 'nodejs';
-export const dynamic = process.env.CLOUDFLARE_PAGES === '1' ? 'force-dynamic' : 'auto';
+// 注意：dynamic = "force-dynamic" 不能与 output: export 一起使用
 
 // 验证管理员权限的中间件
 async function checkAdminAuth(request: NextRequest) {
