@@ -737,12 +737,14 @@ function PlayPageClient() {
   // ---------------------------------------------------------------------------
   // 处理集数切换
   const handleEpisodeChange = (episodeNumber: number) => {
-    if (episodeNumber >= 0 && episodeNumber < totalEpisodes) {
+    // episodeNumber是显示的集数（从1开始），需要转换为索引（从0开始）
+    const episodeIndex = episodeNumber - 1;
+    if (episodeIndex >= 0 && episodeIndex < totalEpisodes) {
       // 在更换集数前保存当前播放进度
       if (artPlayerRef.current && artPlayerRef.current.paused) {
         saveCurrentPlayProgress();
       }
-      setCurrentEpisodeIndex(episodeNumber);
+      setCurrentEpisodeIndex(episodeIndex);
     }
   };
 
