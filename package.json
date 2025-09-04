@@ -19,7 +19,8 @@
     "gen:version": "node scripts/generate-version.js",
     "postbuild": "echo 'Build completed - sitemap generation disabled'",
     "prepare": "husky install",
-    "pages:build": "pnpm gen:runtime && pnpm gen:manifest && next build && npx @cloudflare/next-on-pages --experimental-minify"
+    "pages:build": "pnpm gen:runtime && pnpm gen:manifest && next build && pnpm pages:cleanup && npx @cloudflare/next-on-pages --experimental-minify",
+    "pages:cleanup": "node -e \"const fs=require('fs'),path=require('path');const cleanDir=(dir)=>{if(fs.existsSync(dir)){fs.rmSync(dir,{recursive:true,force:true});console.log('Cleaned:',dir);}};cleanDir('.next/cache');cleanDir('.next/standalone');console.log('Cloudflare Pages cleanup completed');\""
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.12",

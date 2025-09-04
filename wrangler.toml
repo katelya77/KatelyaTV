@@ -42,6 +42,9 @@ LOG_FORMAT = "json"
 # 生产环境标识
 NODE_ENV = "production"
 
+# 管理员密码（生产环境也需要）
+PASSWORD = "your_password"
+
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "katelyatv-db"
@@ -53,6 +56,3 @@ database_id = "your-d1-database-id-here"
 [vars]
 NEXT_PUBLIC_STORAGE_TYPE = "localstorage"
 PASSWORD = "your_password"
-
-name = "NPM_FLAGS"
-value = "--prefix=/opt/buildhome/.asdf/installs/nodejs/18.17.1/.npm"

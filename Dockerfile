@@ -19,6 +19,9 @@ WORKDIR /app
 # 针对ARM架构优化：设置更大的内存限制
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
+# 安装 pnpm（因为这是新的 Alpine 镜像实例）
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # 复制依赖
 COPY --from=deps /app/node_modules ./node_modules
 # 复制全部源代码
