@@ -1,8 +1,8 @@
 name = "katelyatv"
 compatibility_date = "2024-09-01"
 
-# Cloudflare Pages build output directory
-pages_build_output_dir = ".next"
+# Cloudflare Pages build output directory (clean directory without cache)
+pages_build_output_dir = ".next-pages"
 
 [env.production]
 name = "katelyatv"
