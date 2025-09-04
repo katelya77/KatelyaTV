@@ -1,6 +1,9 @@
 name = "katelyatv"
 compatibility_date = "2024-09-01"
 
+# Cloudflare Pages build output directory (clean directory without cache)
+pages_build_output_dir = ".next-pages"
+
 [env.production]
 name = "katelyatv"
 
@@ -39,15 +42,17 @@ LOG_FORMAT = "json"
 # 生产环境标识
 NODE_ENV = "production"
 
+# 管理员密码（生产环境也需要）
+PASSWORD = "your_password"
+
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "katelyatv-db"
 database_id = "your-d1-database-id-here"
 
-[build]
-command = "pnpm pages:build"
-environment = { NODE_VERSION = "18" }
-
-[[build.environment_variables]]
-name = "NPM_FLAGS"
-value = "--prefix=/opt/buildhome/.asdf/installs/nodejs/18.17.1/.npm"
+# =============================================================================
+# Local Development Settings (`wrangler dev`)
+# =============================================================================
+[vars]
+NEXT_PUBLIC_STORAGE_TYPE = "localstorage"
+PASSWORD = "your_password"

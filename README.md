@@ -175,28 +175,48 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
 
 > 详细部署指南请查看：[Kvrocks 部署文档](docs/KVROCKS_DEPLOYMENT.md)
 
-### 方案四：Vercel + Upstash（免费推荐）
+### 方案四：Vercel + Upstash（一键部署）
 
-**适合场景**：无服务器，免费部署，支持多用户
+**适合场景**：无服务器，免费部署，支持多用户。利用 Vercel 自动集成，无需手动注册 Upstash 或配置密钥。
 
-1. **Fork 仓库**：Fork [KatelyaTV](https://github.com/katelya77/KatelyaTV) 到你的 GitHub
+1. **Fork 仓库**：将 [KatelyaTV](https://github.com/katelya77/KatelyaTV) Fork 到你的 GitHub 账户。
+
 2. **部署到 Vercel**：
 
-   - 登录 [Vercel](https://vercel.com/)，导入你的仓库
-   - 添加环境变量：`PASSWORD=your_password`
-   - 点击 Deploy
+   - 登录 [Vercel](https://vercel.com/)，通过你的 GitHub 账户导入刚刚 Fork 的仓库并部署。
 
-3. **配置多用户（可选）**：
-   ```bash
-   # 创建 Upstash Redis 数据库
-   # 在 Vercel 中添加环境变量：
-   NEXT_PUBLIC_STORAGE_TYPE=upstash
-   UPSTASH_URL=https://xxx.upstash.io
-   UPSTASH_TOKEN=your_token
-   NEXT_PUBLIC_ENABLE_REGISTER=true
-   USERNAME=admin
-   PASSWORD=admin_password
-   ```
+3. **关联 Upstash（关键步骤）**：
+
+   - 在 Vercel 项目的控制面板中，进入 **Settings** > **Integrations**。
+   - 搜索 "Upstash" 并点击 **Add Integration**。
+   - 按照指引授权并创建一个新的 Redis 数据库。Vercel 会自动将数据库凭证（`UPSTASH_REDIS_REST_URL` 和 `UPSTASH_REDIS_REST_TOKEN`）添加到你的项目环境变量中。
+
+4. **配置项目环境变量**：
+
+   - 下载环境变量配置模板：
+     ```bash
+     curl -O https://raw.githubusercontent.com/katelya77/KatelyaTV/main/.env.vercel.example
+     ```
+   - 在 Vercel 项目的 **Settings** > **Environment Variables** 中，添加以下变量：
+
+     ```bash
+     # 启用 Upstash 作为存储后端
+     NEXT_PUBLIC_STORAGE_TYPE=upstash
+
+     # 设置管理员账号
+     USERNAME=admin
+     PASSWORD=your_admin_password
+
+     # （可选）允许新用户注册
+     NEXT_PUBLIC_ENABLE_REGISTER=true
+     ```
+
+   - **重要**：你不再需要手动从 Upstash 官网复制和粘贴 `UPSTASH_URL` 和 `UPSTASH_TOKEN`。
+
+5. **重新部署**：
+   - 添加完环境变量后，进入项目的 **Deployments** 页面，对最新的部署记录选择 **Redeploy**，以使所有配置生效。
+
+部署成功后，你就可以使用设置的管理员账号密码登录了。
 
 ### 方案五：Cloudflare + D1（技术爱好者）
 
