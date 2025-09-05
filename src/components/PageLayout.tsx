@@ -186,18 +186,8 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
           {/* 主内容容器 - 修改布局实现完全居中：左右各留白1/6，主内容区占2/3 */}
           <main className='flex-1 md:min-h-0 mb-14 md:mb-0 md:p-6 lg:p-8'>
             {/* 使用flex布局实现三等分 */}
-            <div className='flex w-full min-h-screen md:min-h-[calc(100vh-10rem)]'>
-              {/* 左侧留白区域 - 占1/6 */}
-              <div
-                className='hidden md:block flex-shrink-0'
-                style={{ width: '16.67%' }}
-              ></div>
-
-              {/* 主内容区 - 占2/3 */}
-              <div
-                className='flex-1 md:flex-none rounded-container w-full'
-                style={{ width: '66.67%' }}
-              >
+            <div className='flex w-full min-h-screen'>
+              <div className='flex-1 md:flex-none rounded-container w-full max-w-[1024px] lg:max-w-[1280px] mx-auto'>
                 <div
                   className='p-4 md:p-8 lg:p-10'
                   style={{
@@ -207,12 +197,6 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
                   {children}
                 </div>
               </div>
-
-              {/* 右侧留白区域 - 占1/6 */}
-              <div
-                className='hidden md:block flex-shrink-0'
-                style={{ width: '16.67%' }}
-              ></div>
             </div>
           </main>
         </div>

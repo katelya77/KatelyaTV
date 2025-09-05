@@ -4,6 +4,7 @@
 
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Suspense, useEffect, useState } from 'react';
 
 // 客户端收藏 API
@@ -31,7 +32,7 @@ const MainKatelyaLogo = () => {
       <div className='logo-background-glow'></div>
 
       {/* 主 Logo */}
-      <div className='main-katelya-logo'>KatelyaTV</div>
+      <div className='main-katelya-logo'>春风若有怜花意</div>
 
       {/* 副标题 */}
       <div className='mt-3 text-center'>
@@ -64,9 +65,23 @@ const BottomKatelyaLogo = () => {
       </div>
 
       <div className='text-center'>
-        <div className='bottom-logo'>KatelyaTV</div>
+        <div className='bottom-logo'>打工人（牛马）专用</div>
         <div className='mt-2 text-sm text-gray-500 dark:text-gray-400 opacity-75'>
           Powered by KatelyaTV Core
+        </div>
+        <div className='mt-2 text-sm text-gray-500 dark:text-gray-400 opacity-75'>
+          <span>有建议请联系：</span>
+        </div>
+        <div className='flex justify-center'>
+          <div className='relative'>
+            <Image
+              src='/wechat.webp'
+              alt='wechat'
+              width={200}
+              height={100}
+              className='filter blur-sm hover:blur-none transition-all duration-300'
+            />
+          </div>
         </div>
       </div>
     </div>

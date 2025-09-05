@@ -81,6 +81,22 @@ export interface SearchResult {
   douban_id?: number;
 }
 
+// 分页信息
+export interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// 搜索API响应结构
+export interface SearchApiResponse {
+  results: SearchResult[];
+  pagination: PaginationInfo;
+}
+
 // 豆瓣数据结构
 export interface DoubanItem {
   id: string;

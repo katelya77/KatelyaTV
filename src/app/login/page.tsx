@@ -18,25 +18,26 @@ function VersionDisplay() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const checkUpdate = async () => {
-      try {
-        const status = await checkForUpdates();
-        setUpdateStatus(status);
-      } catch (_) {
-        // do nothing
-      } finally {
-        setIsChecking(false);
-      }
-    };
-
-    checkUpdate();
+    // TODO: 版本检查暂时关闭
+    // const checkUpdate = async () => {
+    //   try {
+    //     const status = await checkForUpdates();
+    //     setUpdateStatus(status);
+    //   } catch (_) {
+    //     // do nothing
+    //   } finally {
+    //     setIsChecking(false);
+    //   }
+    // };
+    // checkUpdate();
   }, []);
 
   return (
     <button
       onClick={() =>
         window.open(
-          process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/katelya77/KatelyaTV',
+          process.env.NEXT_PUBLIC_REPO_URL ||
+            'https://github.com/hcer1999/KatelyaTV',
           '_blank'
         )
       }
@@ -176,6 +177,9 @@ function LoginPageClient() {
             <span className='bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 dark:from-purple-400 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent'>
               {siteName}
             </span>
+            <p className='text-sm text-gray-500 dark:text-gray-400 mt-2'>
+              密码提示: 打工人
+            </p>
           </h1>
 
           <form onSubmit={handleSubmit} className='space-y-8'>

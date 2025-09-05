@@ -12,10 +12,11 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { SearchResult } from '@/lib/types';
+import { SearchResult, SearchApiResponse, PaginationInfo } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
+import Pagination from '@/components/Pagination';
 
 function SearchPageClient() {
   // 搜索历史
@@ -29,6 +30,15 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    pageSize: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   // 获取默认聚合设置：只读取用户本地设置，默认为 true
   const getDefaultAggregate = () => {
@@ -147,26 +157,34 @@ function SearchPageClient() {
   useEffect(() => {
     // 当搜索参数变化时更新搜索状态
     const query = searchParams.get('q');
+    const page = parseInt(searchParams.get('page') || '1');
+
     if (query) {
       setSearchQuery(query);
-      fetchSearchResults(query);
+      setCurrentPage(page);
+      fetchSearchResults(query, page);
 
       // 保存到搜索历史 (事件监听会自动更新界面)
       addSearchHistory(query);
     } else {
       setShowResults(false);
+      setCurrentPage(1);
     }
   }, [searchParams]);
 
-  const fetchSearchResults = async (query: string) => {
+  const fetchSearchResults = async (query: string, page: number = 1) => {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}`
+        `/api/search?q=${encodeURIComponent(
+          query.trim()
+        )}&page=${page}&pageSize=20`
       );
-      const data = await response.json();
-      setSearchResults(
-        data.results.sort((a: SearchResult, b: SearchResult) => {
+      const data: SearchApiResponse = await response.json();
+
+      // 对结果进行排序
+      const sortedResults = data.results.sort(
+        (a: SearchResult, b: SearchResult) => {
           // 优先排序：标题与搜索词完全一致的排在前面
           const aExactMatch = a.title === query.trim();
           const bExactMatch = b.title === query.trim();
@@ -190,11 +208,22 @@ function SearchPageClient() {
               return parseInt(a.year) > parseInt(b.year) ? -1 : 1;
             }
           }
-        })
+        }
       );
+
+      setSearchResults(sortedResults);
+      setPagination(data.pagination);
       setShowResults(true);
     } catch (error) {
       setSearchResults([]);
+      setPagination({
+        page: 1,
+        pageSize: 20,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -209,13 +238,26 @@ function SearchPageClient() {
     setSearchQuery(trimmed);
     setIsLoading(true);
     setShowResults(true);
+    setCurrentPage(1);
 
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    router.push(`/search?q=${encodeURIComponent(trimmed)}&page=1`);
     // 直接发请求
-    fetchSearchResults(trimmed);
+    fetchSearchResults(trimmed, 1);
 
     // 保存到搜索历史 (事件监听会自动更新界面)
     addSearchHistory(trimmed);
+  };
+
+  // 处理分页变化
+  const handlePageChange = (page: number) => {
+    const query = searchParams.get('q');
+    if (query) {
+      setCurrentPage(page);
+      router.push(`/search?q=${encodeURIComponent(query)}&page=${page}`);
+
+      // 滚动到页面顶部
+      scrollToTop();
+    }
   };
 
   // 返回顶部功能
@@ -262,9 +304,16 @@ function SearchPageClient() {
             <section className='mb-12'>
               {/* 标题 + 聚合开关 */}
               <div className='mb-8 flex items-center justify-between'>
-                <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                  搜索结果
-                </h2>
+                <div className='flex items-center gap-4'>
+                  <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+                    搜索结果
+                  </h2>
+                  {pagination.total > 0 && (
+                    <span className='text-sm text-gray-600 dark:text-gray-400'>
+                      共 {pagination.total} 个结果
+                    </span>
+                  )}
+                </div>
                 {/* 聚合开关 */}
                 <label className='flex items-center gap-2 cursor-pointer select-none'>
                   <span className='text-sm text-gray-700 dark:text-gray-300'>
@@ -334,6 +383,20 @@ function SearchPageClient() {
                   </div>
                 )}
               </div>
+
+              {/* 分页组件 */}
+              {pagination.totalPages > 1 && (
+                <div className='mt-8 sm:mt-12 flex justify-center overflow-x-auto'>
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    hasNext={pagination.hasNext}
+                    hasPrev={pagination.hasPrev}
+                    onPageChange={handlePageChange}
+                    className='min-w-fit'
+                  />
+                </div>
+              )}
             </section>
           ) : searchHistory.length > 0 ? (
             // 搜索历史
@@ -358,7 +421,7 @@ function SearchPageClient() {
                       onClick={() => {
                         setSearchQuery(item);
                         router.push(
-                          `/search?q=${encodeURIComponent(item.trim())}`
+                          `/search?q=${encodeURIComponent(item.trim())}&page=1`
                         );
                       }}
                       className='px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'

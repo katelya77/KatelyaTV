@@ -79,6 +79,10 @@ export default async function RootLayout({
 
   return (
     <html lang='zh-CN' suppressHydrationWarning>
+      <meta
+        name='viewport'
+        content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+      />
       <head>
         {/* 将配置序列化后直接写入脚本，浏览器端可通过 window.RUNTIME_CONFIG 获取 */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
