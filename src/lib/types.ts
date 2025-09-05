@@ -87,11 +87,18 @@ export interface IStorage {
   deleteSkipConfig(userName: string, key: string): Promise<void>;
 
   // 用户列表
-  getAllUsers(): Promise<string[]>;
+  getAllUsers(): Promise<User[]>;
 
   // 管理员配置相关
   getAdminConfig(): Promise<AdminConfig | null>;
   setAdminConfig(config: AdminConfig): Promise<void>;
+}
+
+// 用户数据结构
+export interface User {
+  username: string;
+  role?: string;
+  created_at?: string;
 }
 
 // 搜索结果数据结构

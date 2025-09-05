@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -302,14 +302,23 @@ export class RedisStorage implements IStorage {
   }
 
   // ---------- 获取全部用户 ----------
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     const keys = await withRetry(() => this.client.keys('u:*:pwd'));
-    return keys
-      .map((k) => {
-        const match = k.match(/^u:(.+?):pwd$/);
-        return match ? ensureString(match[1]) : undefined;
-      })
-      .filter((u): u is string => typeof u === 'string');
+    const users: User[] = [];
+    
+    for (const k of keys) {
+      const match = k.match(/^u:(.+?):pwd$/);
+      if (match) {
+        const username = ensureString(match[1]);
+        users.push({
+          username,
+          role: username === (process.env.USERNAME || 'admin') ? 'owner' : 'user',
+          created_at: new Date().toISOString()
+        });
+      }
+    }
+    
+    return users;
   }
 
   // ---------- 管理员配置 ----------

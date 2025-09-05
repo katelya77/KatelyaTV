@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 /**
  * LocalStorage 存储实现
@@ -341,18 +341,22 @@ export class LocalStorage implements IStorage {
   }
 
   // ---------- 管理员功能 ----------
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     if (typeof window === 'undefined') return [];
     
     try {
-      const users: string[] = [];
+      const users: User[] = [];
       const prefix = 'katelyatv_user_';
       
       for (let i = 0; i < localStorage.length; i++) {
         const storageKey = localStorage.key(i);
         if (storageKey && storageKey.startsWith(prefix)) {
           const userName = storageKey.replace(prefix, '');
-          users.push(userName);
+          users.push({
+            username: userName,
+            role: userName === (process.env.USERNAME || 'admin') ? 'owner' : 'user',
+            created_at: new Date().toISOString() // LocalStorage doesn't store creation time
+          });
         }
       }
       

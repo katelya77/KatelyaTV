@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -428,14 +428,18 @@ export class D1Storage implements IStorage {
   }
 
   // 用户列表
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     try {
       const db = await this.getDatabase();
       const result = await db
-        .prepare('SELECT username FROM users ORDER BY created_at ASC')
-        .all<{ username: string }>();
+        .prepare('SELECT username, role, created_at FROM users ORDER BY created_at ASC')
+        .all<{ username: string; role?: string; created_at?: string }>();
 
-      return result.results.map((row) => row.username);
+      return result.results.map((row) => ({
+        username: row.username,
+        role: row.role,
+        created_at: row.created_at
+      }));
     } catch (err) {
       console.error('Failed to get all users:', err);
       throw err;
@@ -446,14 +450,40 @@ export class D1Storage implements IStorage {
   async getAdminConfig(): Promise<AdminConfig | null> {
     try {
       const db = await this.getDatabase();
-      const result = await db
-        .prepare('SELECT config_value as config FROM admin_configs WHERE config_key = ? LIMIT 1')
-        .bind('main_config')
-        .first<{ config: string }>();
+      
+      // 首次使用时检查是否需要迁移
+      await this.migrateAdminConfigIfNeeded();
+      
+      // 先尝试新的表名 admin_configs
+      try {
+        const result = await db
+          .prepare('SELECT config_value as config FROM admin_configs WHERE config_key = ? LIMIT 1')
+          .bind('main_config')
+          .first<{ config: string }>();
 
-      if (!result) return null;
+        if (result) {
+          return JSON.parse(result.config) as AdminConfig;
+        }
+      } catch (newTableError) {
+        console.log('New table admin_configs not found, trying legacy table admin_config');
+      }
 
-      return JSON.parse(result.config) as AdminConfig;
+      // 如果新表不存在或没有数据，尝试旧表名 admin_config
+      try {
+        const result = await db
+          .prepare('SELECT config_value as config FROM admin_config WHERE config_key = ? LIMIT 1')
+          .bind('main_config')
+          .first<{ config: string }>();
+
+        if (result) {
+          console.log('Found config in legacy table admin_config');
+          return JSON.parse(result.config) as AdminConfig;
+        }
+      } catch (oldTableError) {
+        console.log('Legacy table admin_config also not found');
+      }
+
+      return null;
     } catch (err) {
       console.error('Failed to get admin config:', err);
       throw err;
@@ -463,15 +493,95 @@ export class D1Storage implements IStorage {
   async setAdminConfig(config: AdminConfig): Promise<void> {
     try {
       const db = await this.getDatabase();
-      await db
-        .prepare(
-          'INSERT OR REPLACE INTO admin_configs (config_key, config_value, description) VALUES (?, ?, ?)'
-        )
-        .bind('main_config', JSON.stringify(config), '主要管理员配置')
-        .run();
+      
+      // 先尝试使用新表名 admin_configs
+      try {
+        await db
+          .prepare(
+            'INSERT OR REPLACE INTO admin_configs (config_key, config_value, description) VALUES (?, ?, ?)'
+          )
+          .bind('main_config', JSON.stringify(config), '主要管理员配置')
+          .run();
+        return;
+      } catch (newTableError) {
+        console.log('New table admin_configs not available, trying legacy table admin_config');
+      }
+
+      // 如果新表不存在，使用旧表名 admin_config
+      try {
+        await db
+          .prepare(
+            'INSERT OR REPLACE INTO admin_config (config_key, config_value, description) VALUES (?, ?, ?)'
+          )
+          .bind('main_config', JSON.stringify(config), '主要管理员配置')
+          .run();
+        console.log('Config saved to legacy table admin_config');
+      } catch (oldTableError) {
+        console.error('Both admin_configs and admin_config tables failed:', oldTableError);
+        throw oldTableError;
+      }
     } catch (err) {
       console.error('Failed to set admin config:', err);
       throw err;
+    }
+  }
+
+  // 自动迁移旧的管理员配置表
+  private async migrateAdminConfigIfNeeded(): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      
+      // 检查新表是否存在
+      const newTableExists = await db
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='admin_configs'")
+        .first();
+      
+      if (newTableExists) {
+        console.log('New admin_configs table already exists');
+        return;
+      }
+
+      // 检查旧表是否存在并有数据
+      const oldTableExists = await db
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='admin_config'")
+        .first();
+      
+      if (!oldTableExists) {
+        console.log('No legacy admin_config table found');
+        return;
+      }
+
+      console.log('Starting migration from admin_config to admin_configs...');
+
+      // 创建新表
+      await db
+        .prepare(`
+          CREATE TABLE admin_configs (
+            config_key TEXT PRIMARY KEY,
+            config_value TEXT NOT NULL,
+            description TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `)
+        .run();
+
+      // 迁移数据
+      await db
+        .prepare(`
+          INSERT INTO admin_configs (config_key, config_value, description)
+          SELECT config_key, config_value, description FROM admin_config
+        `)
+        .run();
+
+      console.log('Migration completed successfully');
+      
+      // 可选：删除旧表（注释掉以保持数据安全）
+      // await db.prepare('DROP TABLE admin_config').run();
+      
+    } catch (err) {
+      console.error('Failed to migrate admin config table:', err);
+      // 不抛出错误，允许系统继续使用旧表
     }
   }
 

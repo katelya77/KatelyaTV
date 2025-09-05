@@ -2,6 +2,11 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const nextConfig = {
   output: 'standalone',
+  experimental: {
+    outputFileTracingExcludes: {
+      '/': ['**/*.map']
+    }
+  },
   eslint: {
     dirs: ['src'],
   },

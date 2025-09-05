@@ -1,6 +1,9 @@
 name = "katelyatv"
 compatibility_date = "2024-09-01"
 
+# Cloudflare Pages 配置
+pages_build_output_dir = ".vercel/output/static"
+
 [env.production]
 name = "katelyatv"
 
@@ -43,11 +46,3 @@ NODE_ENV = "production"
 binding = "DB"
 database_name = "katelyatv-db"
 database_id = "your-d1-database-id-here"
-
-[build]
-command = "pnpm pages:build"
-environment = { NODE_VERSION = "18" }
-
-[[build.environment_variables]]
-name = "NPM_FLAGS"
-value = "--prefix=/opt/buildhome/.asdf/installs/nodejs/18.17.1/.npm"
