@@ -38,6 +38,7 @@ import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import PageLayout from '@/components/PageLayout';
+import UserManagement from '@/components/UserManagement';
 
 // 统一弹窗方法（必须在首次使用前定义）
 const showError = (message: string) =>
@@ -1649,6 +1650,7 @@ function AdminPageClient() {
   const [role, setRole] = useState<'owner' | 'admin' | null>(null);
   const [expandedTabs, setExpandedTabs] = useState<{ [key: string]: boolean }>({
     userConfig: false,
+    userManagement: false,
     videoSource: false,
     siteConfig: false,
   });
@@ -1802,6 +1804,20 @@ function AdminPageClient() {
                 refreshConfig={fetchConfig}
               />
             </CollapsibleTab>
+
+            {/* 用户管理标签 (只有站长可见) */}
+            {role === 'owner' && (
+              <CollapsibleTab
+                title='用户管理'
+                icon={
+                  <Users size={20} className='text-gray-600 dark:text-gray-400' />
+                }
+                isExpanded={expandedTabs.userManagement}
+                onToggle={() => toggleTab('userManagement')}
+              >
+                <UserManagement />
+              </CollapsibleTab>
+            )}
 
             {/* 视频源配置标签 */}
             <CollapsibleTab

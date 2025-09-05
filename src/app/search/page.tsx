@@ -176,7 +176,7 @@ function SearchPageClient() {
       // 构建请求头
       const headers: HeadersInit = {};
       if (authInfo?.username) {
-        headers['Authorization'] = `Bearer ${authInfo.username}`;
+        headers['Authorization'] = `Bearer ${encodeURIComponent(authInfo.username)}`; // 修复中文用户名问题
       }
       
       // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
@@ -337,9 +337,15 @@ function SearchPageClient() {
                   </div>
                   {activeTab === 'adult' && (
                     <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                      <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                        ⚠️ 以下内容可能包含成人资源，请确保您已年满18周岁
-                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-lg">⚠️</span>
+                        <div className="text-sm text-red-600 dark:text-red-400 text-center">
+                          <div className="font-medium">成人内容警告</div>
+                          <div className="mt-1 opacity-90">
+                            以下内容可能包含成人资源，请确保您已年满18周岁并同意查看此类内容
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

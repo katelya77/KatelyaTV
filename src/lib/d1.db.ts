@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -428,14 +428,18 @@ export class D1Storage implements IStorage {
   }
 
   // 用户列表
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     try {
       const db = await this.getDatabase();
       const result = await db
-        .prepare('SELECT username FROM users ORDER BY created_at ASC')
-        .all<{ username: string }>();
+        .prepare('SELECT username, role, created_at FROM users ORDER BY created_at ASC')
+        .all<{ username: string; role?: string; created_at?: string }>();
 
-      return result.results.map((row) => row.username);
+      return result.results.map((row) => ({
+        username: row.username,
+        role: row.role,
+        created_at: row.created_at
+      }));
     } catch (err) {
       console.error('Failed to get all users:', err);
       throw err;

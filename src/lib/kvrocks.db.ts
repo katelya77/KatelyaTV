@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, UserSettings } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -266,9 +266,19 @@ export class KvrocksStorage implements IStorage {
     });
   }
 
-  async getAllUsers(): Promise<string[]> {
-    const users = await withRetry(() => this.client.sMembers(this.userListKey()));
-    return ensureStringArray(users);
+  async getAllUsers(): Promise<User[]> {
+    const usernames = await withRetry(() => this.client.sMembers(this.userListKey()));
+    const users: User[] = [];
+    
+    for (const username of ensureStringArray(usernames)) {
+      users.push({
+        username,
+        role: username === (process.env.USERNAME || 'admin') ? 'owner' : 'user',
+        created_at: new Date().toISOString()
+      });
+    }
+    
+    return users;
   }
 
   async registerUser(userName: string, password: string): Promise<void> {
