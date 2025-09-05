@@ -172,7 +172,7 @@ function SearchPageClient() {
     }
   }, [searchParams]);
 
-  const fetchSearchResults = async (query: string, page: number = 1) => {
+  const fetchSearchResults = async (query: string, page = 1) => {
     try {
       setIsLoading(true);
       const response = await fetch(
