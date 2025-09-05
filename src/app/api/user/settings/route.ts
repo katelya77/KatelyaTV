@@ -34,6 +34,12 @@ export async function GET(_request: NextRequest) {
         auto_play: true,
         video_quality: 'auto'
       }
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -78,6 +84,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ 
       success: true,
       message: '设置更新成功' 
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
   } catch (error) {
     // eslint-disable-next-line no-console

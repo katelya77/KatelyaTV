@@ -180,9 +180,16 @@ function SearchPageClient() {
       }
       
       // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
+      // 添加时间戳参数避免缓存问题
+      const timestamp = Date.now();
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}`, 
-        { headers }
+        `/api/search?q=${encodeURIComponent(query.trim())}&t=${timestamp}`, 
+        { 
+          headers: {
+            ...headers,
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          }
+        }
       );
       const data = await response.json();
       
