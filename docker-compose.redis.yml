@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # KatelyaTV 应用服务
+  katelyatv:
+    image: ghcr.io/katelya77/katelyatv:latest
+    ports:
+      - "3000:3000"
+    environment:
+      # 数据库配置 - 使用 Redis
+      NEXT_PUBLIC_STORAGE_TYPE: redis
+      REDIS_URL: redis://katelyatv-redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_DATABASE: 0
+      
+      # 站点访问密码配置
+      PASSWORD: ${PASSWORD:-}
+      
+      # 其他必要的环境变量
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+    depends_on:
+      - katelyatv-redis
+    restart: unless-stopped
+    networks:
+      - katelyatv-network
+
+  # Redis 数据库服务
+  katelyatv-redis:
+    image: redis:7-alpine
+    container_name: katelyatv-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      # 持久化数据存储
+      - katelyatv-redis-data:/data
+    restart: unless-stopped
+    networks:
+      - katelyatv-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  # Redis 数据卷
+  katelyatv-redis-data:
+    driver: local
+
+networks:
+  katelyatv-network:
+    driver: bridge

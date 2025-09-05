@@ -9,6 +9,9 @@ WORKDIR /app
 # 仅复制依赖清单，提高构建缓存利用率
 COPY package.json pnpm-lock.yaml ./
 
+# 针对ARM架构优化：设置更大的内存限制和超时时间
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # 安装所有依赖（含 devDependencies，后续会裁剪）
 RUN pnpm install --frozen-lockfile
 
@@ -16,6 +19,9 @@ RUN pnpm install --frozen-lockfile
 FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
+
+# 针对ARM架构优化：设置更大的内存限制
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # 复制依赖
 COPY --from=deps /app/node_modules ./node_modules

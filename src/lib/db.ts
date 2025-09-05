@@ -2,15 +2,18 @@
 
 import { AdminConfig } from './admin.types';
 import { D1Storage } from './d1.db';
+import { KvrocksStorage } from './kvrocks.db';
+import { LocalStorage } from './localstorage.db';
 import { RedisStorage } from './redis.db';
-import { Favorite, IStorage, PlayRecord } from './types';
+import { Favorite, IStorage, PlayRecord, User } from './types';
 import { UpstashRedisStorage } from './upstash.db';
 
-// storage type 常量: 'localstorage' | 'redis' | 'd1' | 'upstash'，默认 'localstorage'
+// storage type 常量: 'localstorage' | 'redis' | 'kvrocks' | 'd1' | 'upstash'，默认 'localstorage'
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
     | 'redis'
+    | 'kvrocks'
     | 'd1'
     | 'upstash'
     | undefined) || 'localstorage';
@@ -20,14 +23,16 @@ function createStorage(): IStorage {
   switch (STORAGE_TYPE) {
     case 'redis':
       return new RedisStorage();
+    case 'kvrocks':
+      return new KvrocksStorage();
     case 'upstash':
       return new UpstashRedisStorage();
     case 'd1':
       return new D1Storage();
     case 'localstorage':
     default:
-      // 默认返回内存实现，保证本地开发可用
-      return null as unknown as IStorage;
+      // 使用 LocalStorage 实现，适用于本地开发和简单部署
+      return new LocalStorage();
   }
 }
 
@@ -160,8 +165,8 @@ export class DbManager {
     await this.storage.deleteSearchHistory(userName, keyword);
   }
 
-  // 获取全部用户名
-  async getAllUsers(): Promise<string[]> {
+  // 获取全部用户
+  async getAllUsers(): Promise<User[]> {
     if (typeof (this.storage as any).getAllUsers === 'function') {
       return (this.storage as any).getAllUsers();
     }
@@ -179,6 +184,45 @@ export class DbManager {
   async saveAdminConfig(config: AdminConfig): Promise<void> {
     if (typeof (this.storage as any).setAdminConfig === 'function') {
       await (this.storage as any).setAdminConfig(config);
+    }
+  }
+
+  // ---------- 跳过配置 ----------
+  async getSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<any> {
+    if (typeof (this.storage as any).getSkipConfig === 'function') {
+      return (this.storage as any).getSkipConfig(userName, key);
+    }
+    return null;
+  }
+
+  async saveSkipConfig(
+    userName: string,
+    key: string,
+    config: any
+  ): Promise<void> {
+    if (typeof (this.storage as any).setSkipConfig === 'function') {
+      await (this.storage as any).setSkipConfig(userName, key, config);
+    }
+  }
+
+  async getAllSkipConfigs(
+    userName: string
+  ): Promise<{ [key: string]: any }> {
+    if (typeof (this.storage as any).getAllSkipConfigs === 'function') {
+      return (this.storage as any).getAllSkipConfigs(userName);
+    }
+    return {};
+  }
+
+  async deleteSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<void> {
+    if (typeof (this.storage as any).deleteSkipConfig === 'function') {
+      await (this.storage as any).deleteSkipConfig(userName, key);
     }
   }
 }

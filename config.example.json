@@ -1,0 +1,29 @@
+{
+  "cache_time": 7200,
+  "api_site": {
+    "example_source": {
+      "api": "https://your-video-api.com/api.php/provide/vod",
+      "name": "示例视频源",
+      "detail": "https://your-video-api.com/api.php/provide/vod/?ac=detail&ids={ids}",
+      "is_adult": false
+    },
+    "another_example": {
+      "api": "https://another-api.com/api.php/provide/vod",
+      "name": "另一个示例源",
+      "detail": "https://another-api.com/api.php/provide/vod/?ac=detail&ids={ids}",
+      "is_adult": false
+    },
+    "adult_example": {
+      "api": "https://adult-content-api.com/api.php/provide/vod",
+      "name": "成人内容源示例",
+      "detail": "https://adult-content-api.com/api.php/provide/vod/?ac=detail&ids={ids}",
+      "is_adult": true
+    },
+    "test_adult_source": {
+      "api": "https://test-adult-api.com/api.php/provide/vod",
+      "name": "测试成人源（用于验证过滤）",
+      "detail": "https://test-adult-api.com/api.php/provide/vod/?ac=detail&ids={ids}",
+      "is_adult": true
+    }
+  }
+}

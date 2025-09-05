@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any,react-hooks/exhaustive-deps */
-
 'use client';
 
 import { Moon, Sun } from 'lucide-react';
@@ -25,7 +23,7 @@ export function ThemeToggle() {
   useEffect(() => {
     setMounted(true);
     setThemeColor(resolvedTheme);
-  }, []);
+  }, [resolvedTheme]);
 
   if (!mounted) {
     // 渲染一个占位符以避免布局偏移
@@ -36,12 +34,18 @@ export function ThemeToggle() {
     // 检查浏览器是否支持 View Transitions API
     const targetTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
     setThemeColor(targetTheme);
-    if (!(document as any).startViewTransition) {
+    
+    // 使用更好的类型定义
+    const documentWithTransition = document as Document & {
+      startViewTransition?: (callback: () => void) => void;
+    };
+    
+    if (!documentWithTransition.startViewTransition) {
       setTheme(targetTheme);
       return;
     }
 
-    (document as any).startViewTransition(() => {
+    documentWithTransition.startViewTransition(() => {
       setTheme(targetTheme);
     });
   };

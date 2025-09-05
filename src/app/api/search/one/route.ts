@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 
 import { getAvailableApiSites, getCacheTime } from '@/lib/config';
+import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
 import { searchFromApi } from '@/lib/downstream';
 
 export const runtime = 'edge';
+
+// 处理OPTIONS预检请求（OrionTV客户端需要）
+export async function OPTIONS() {
+  return handleOptionsRequest();
+}
 
 // OrionTV 兼容接口
 export async function GET(request: Request) {
@@ -13,7 +19,7 @@ export async function GET(request: Request) {
 
   if (!query || !resourceId) {
     const cacheTime = await getCacheTime();
-    return NextResponse.json(
+    const response = NextResponse.json(
       { result: null, error: '缺少必要参数: q 或 resourceId' },
       {
         headers: {
@@ -23,6 +29,7 @@ export async function GET(request: Request) {
         },
       }
     );
+    return addCorsHeaders(response);
   }
 
   const apiSites = await getAvailableApiSites();
@@ -31,13 +38,14 @@ export async function GET(request: Request) {
     // 根据 resourceId 查找对应的 API 站点
     const targetSite = apiSites.find((site) => site.key === resourceId);
     if (!targetSite) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           error: `未找到指定的视频源: ${resourceId}`,
           result: null,
         },
         { status: 404 }
       );
+      return addCorsHeaders(response);
     }
 
     const results = await searchFromApi(targetSite, query);
@@ -45,15 +53,16 @@ export async function GET(request: Request) {
     const cacheTime = await getCacheTime();
 
     if (result.length === 0) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           error: '未找到结果',
           result: null,
         },
         { status: 404 }
       );
+      return addCorsHeaders(response);
     } else {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { results: result },
         {
           headers: {
@@ -63,14 +72,16 @@ export async function GET(request: Request) {
           },
         }
       );
+      return addCorsHeaders(response);
     }
   } catch (error) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error: '搜索失败',
         result: null,
       },
       { status: 500 }
     );
+    return addCorsHeaders(response);
   }
 }

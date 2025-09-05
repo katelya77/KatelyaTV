@@ -13,60 +13,44 @@ jobs:
       packages: write
       discussions: write
       issues: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          # 修改这里：改为 pnpm 或者移除 cache 配置
-          # cache: 'npm'  # 删除这行，因为使用的是 pnpm
-      
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8
-          # 添加 pnpm 缓存配置
           run_install: false
-      
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      
+
       - name: Setup pnpm cache
         uses: actions/cache@v3
         with:
-          path: ${{ env.STORE_PATH }}
+          path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-      
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      
+
       - name: Build project
         run: pnpm run build
-        env:
-          PASSWORD: ${{ secrets.PASSWORD }}
-      
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            .next/**/*
-            public/**/*
             package.json
-            README.md
-            CHANGELOG.md
-            LICENSE
-            config.json
+            pnpm-lock.yaml
             next.config.js
             tailwind.config.ts
             tsconfig.json
@@ -75,218 +59,87 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
-          title: '🎉 Release ${{ github.ref_name }}'
+          tag_name: ${{ github.ref_name }}
+          name: '🎉 Release ${{ github.ref_name }}'
           body: |
             ## 🎉 新版本发布
-            
+
             **版本号**: ${{ github.ref_name }}
             **发布日期**: ${{ github.event.head_commit.timestamp }}
-            
+
             ### 🚀 快速开始
-            
+
             #### Docker 部署（推荐）
             ```bash
-            docker pull ghcr.io/senshinya/moontv:${{ github.ref_name }}
-            docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:${{ github.ref_name }}
+            docker pull ghcr.io/katelya77/katelyatv:${{ github.ref_name }}
+            docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:${{ github.ref_name }}
             ```
-            
-            #### Vercel 部署
-            - Fork 本仓库
-            - 在 Vercel 中导入项目
-            - 设置环境变量 PASSWORD
-            - 自动部署完成
-            
+
             #### Cloudflare Pages 部署
             - Fork 本仓库
             - 在 Cloudflare Pages 中导入项目
-            - 设置构建命令：`pnpm run pages:build`
-            - 配置环境变量
-            
+            - 构建命令：`pnpm pages:build`
+            - 输出目录：`.vercel/output/static`
+
+            #### Vercel 部署
+            - Fork 本仓库
+            - 在 Vercel 中导入项目
+            - 构建命令：`pnpm run build`
+
             ### 📋 环境变量
-            
+
             | 变量 | 说明 | 默认值 |
             |------|------|--------|
             | PASSWORD | 访问密码 | 必填 |
             | NEXT_PUBLIC_STORAGE_TYPE | 存储类型 | localstorage |
             | USERNAME | 管理员账号 | 空 |
-            
+
             更多环境变量请查看 [README.md](README.md)
-            
+
             ### 🔗 相关资源
-            
-            - [项目文档](https://github.com/senshinya/moontv#readme)
-            - [问题反馈](https://github.com/senshinya/moontv/issues)
-            - [功能讨论](https://github.com/senshinya/moontv/discussions)
-            - [贡献指南](https://github.com/senshinya/moontv/blob/main/CONTRIBUTING.md)
-            
+
+            - [项目文档](https://github.com/katelya77/KatelyaTV#readme)
+            - [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
+            - [功能讨论](https://github.com/katelya77/KatelyaTV/discussions)
+            - [贡献指南](https://github.com/katelya77/KatelyaTV/blob/main/CONTRIBUTING.md)
+
             ### 📝 更新日志
-            
+
             查看 [CHANGELOG.md](CHANGELOG.md) 了解详细的更新历史。
-            
+
             ---
-            
+
             **注意**: 本项目仅供学习和个人使用，请遵守当地法律法规。
-      
+
+  docker:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/senshinya/moontv:${{ github.ref_name }}
-            ghcr.io/senshinya/moontv:latest
+            ghcr.io/katelya77/katelyatv:${{ github.ref_name }}
+            ghcr.io/katelya77/katelyatv:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
-      
-      - name: Update Release with Docker Info
-        uses: softprops/action-gh-release@v1
-        with:
-          body: |
-            ## 🎉 新版本发布
-            
-            **版本号**: ${{ github.ref_name }}
-            **发布日期**: ${{ github.event.head_commit.timestamp }}
-            
-            ### 🐳 Docker 镜像
-            
-            Docker 镜像已自动构建并推送到 GitHub Container Registry：
-            
-            ```bash
-            # 拉取指定版本
-            docker pull ghcr.io/senshinya/moontv:${{ github.ref_name }}
-            
-            # 拉取最新版本
-            docker pull ghcr.io/senshinya/moontv:latest
-            
-            # 运行容器
-            docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:${{ github.ref_name }}
-            ```
-            
-            ### 🚀 其他部署方式
-            
-            #### Vercel 部署
-            - Fork 本仓库
-            - 在 Vercel 中导入项目
-            - 设置环境变量 PASSWORD
-            - 自动部署完成
-            
-            #### Cloudflare Pages 部署
-            - Fork 本仓库
-            - 在 Cloudflare Pages 中导入项目
-            - 设置构建命令：`pnpm run pages:build`
-            - 配置环境变量
-            
-            ### 📋 环境变量
-            
-            | 变量 | 说明 | 默认值 |
-            |------|------|--------|
-            | PASSWORD | 访问密码 | 必填 |
-            | NEXT_PUBLIC_STORAGE_TYPE | 存储类型 | localstorage |
-            | USERNAME | 管理员账号 | 空 |
-            
-            更多环境变量请查看 [README.md](README.md)
-            
-            ### 🔗 相关资源
-            
-            - [项目文档](https://github.com/senshinya/moontv#readme)
-            - [问题反馈](https://github.com/senshinya/moontv/issues)
-            - [功能讨论](https://github.com/senshinya/moontv/discussions)
-            - [贡献指南](https://github.com/senshinya/moontv/blob/main/CONTRIBUTING.md)
-            
-            ### 📝 更新日志
-            
-            查看 [CHANGELOG.md](CHANGELOG.md) 了解详细的更新历史。
-            
-            ---
-            
-            **注意**: 本项目仅供学习和个人使用，请遵守当地法律法规。
-          update_existing_release: true
-      
-      - name: Create Discussion
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: discussions } = await github.rest.discussions.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🎉 ${context.ref_name} 版本发布讨论`,
-              body: `## 🎉 ${context.ref_name} 版本发布成功！
-              
-              新版本已成功发布，包含以下更新：
-              
-              ### 🚀 主要特性
-              - 观看历史记录功能
-              - 多源聚合搜索
-              - PWA 支持
-              - 深色模式
-              - 多用户系统
-              
-              ### 🐳 Docker 部署
-              \`\`\`bash
-              docker pull ghcr.io/senshinya/moontv:${context.ref_name}
-              docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:${context.ref_name}
-              \`\`\`
-              
-              ### 📋 环境变量
-              | 变量 | 说明 | 默认值 |
-              |------|------|--------|
-              | PASSWORD | 访问密码 | 必填 |
-              | NEXT_PUBLIC_STORAGE_TYPE | 存储类型 | localstorage |
-              | USERNAME | 管理员账号 | 空 |
-              
-              ### 🔗 相关链接
-              - [Release 页面](https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/${context.ref_name})
-              - [项目文档](https://github.com/${context.repo.owner}/${context.repo.repo}#readme)
-              - [问题反馈](https://github.com/${context.repo.owner}/${context.repo.repo}/issues)
-              
-              ---
-              
-              欢迎在此讨论新版本的使用体验、问题反馈和功能建议！
-              
-              **注意**: 本项目仅供学习和个人使用，请遵守当地法律法规。`,
-              category: 'ANNOUNCEMENT'
-            });
-            
-            console.log(`Discussion created: ${discussions.html_url}`);
-      
-      - name: Comment on Issues
-        uses: actions/github-script@v7
-        with:
-          script: |
-            // 查找与当前版本相关的 issue
-            const { data: issues } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              labels: ['enhancement', 'bug', 'feature']
-            });
-            
-            // 在相关 issue 下添加评论
-            for (const issue of issues) {
-              if (issue.title.toLowerCase().includes('release') || 
-                  issue.title.toLowerCase().includes('version') ||
-                  issue.body?.toLowerCase().includes('release') ||
-                  issue.body?.toLowerCase().includes('version')) {
-                
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issue.number,
-                  body: `🎉 好消息！${context.ref_name} 版本已经发布，可能解决了您提到的问题。
-                  
-                  请查看 [Release 页面](https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/${context.ref_name}) 了解详细更新内容。
-                  
-                  如果问题仍然存在，请提供更多详细信息，我们会继续关注。`
-                });
-                
-                console.log(`Commented on issue #${issue.number}`);
-              }
-            }
-      
-      - name: Notify Success
-        run: |
-          echo "🎉 Release ${{ github.ref_name }} 发布成功！"
-          echo "📦 Docker 镜像: ghcr.io/senshinya/moontv:${{ github.ref_name }}"
-          echo "🔗 Release 页面: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
-          echo "📝 更新日志: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md"

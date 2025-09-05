@@ -11,9 +11,16 @@ const config: Config = {
   theme: {
     extend: {
       screens: {
+        'xs': '475px',
         'mobile-landscape': {
           raw: '(orientation: landscape) and (max-height: 700px)',
         },
+      },
+      gridTemplateColumns: {
+        '13': 'repeat(13, minmax(0, 1fr))',
+        '14': 'repeat(14, minmax(0, 1fr))',
+        '15': 'repeat(15, minmax(0, 1fr))',
+        '16': 'repeat(16, minmax(0, 1fr))',
       },
       fontFamily: {
         primary: ['Inter', ...defaultTheme.fontFamily.sans],

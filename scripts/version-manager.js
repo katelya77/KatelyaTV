@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable @typescript-eslint/no-var-requires, no-console, unused-imports/no-unused-vars */
+
 /**
  * MoonTV 版本管理脚本
  * 用于自动化版本号更新、CHANGELOG 生成和发布管理
@@ -13,7 +15,7 @@ const { execSync } = require('child_process');
 const PACKAGE_JSON = path.join(__dirname, '../package.json');
 const VERSION_TXT = path.join(__dirname, '../VERSION.txt');
 const CHANGELOG_MD = path.join(__dirname, '../CHANGELOG.md');
-const README_MD = path.join(__dirname, '../README.md');
+const _README_MD = path.join(__dirname, '../README.md');
 
 // 版本类型
 const VERSION_TYPES = {
@@ -166,8 +168,8 @@ function updateChangelog(newVersion, type) {
 
 #### Docker 部署
 \`\`\`bash
-docker pull ghcr.io/senshinya/moontv:v${newVersion}
-docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:v${newVersion}
+docker pull ghcr.io/katelya77/katelyatv:v${newVersion}
+docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:v${newVersion}
 \`\`\`
 
 #### 环境变量更新
@@ -177,10 +179,10 @@ docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/se
 查看 [CHANGELOG.md](CHANGELOG.md) 了解详细的更新历史。
 
 ### 🔗 相关链接
-- [项目主页](https://github.com/senshinya/moontv)
-- [在线演示](https://moontv.vercel.app)
-- [问题反馈](https://github.com/senshinya/moontv/issues)
-- [功能建议](https://github.com/senshinya/moontv/discussions)
+- [项目主页](https://github.com/katelya77/KatelyaTV)
+- [在线演示](https://katelyatv.vercel.app)
+- [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
+- [功能建议](https://github.com/katelya77/KatelyaTV/discussions)
 
 `;
 
