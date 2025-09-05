@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-non-null-assertion */
 
-import { getStorage } from '@/lib/db';
-
 import { AdminConfig } from './admin.types';
+import { getStorage } from './db';
 import runtimeConfig from './runtime';
 
 export interface ApiSite {
@@ -412,6 +411,52 @@ export async function getAvailableApiSites(filterAdult = false): Promise<ApiSite
   
   // 如果需要过滤成人内容，则排除标记为成人内容的资源站
   if (filterAdult) {
+    sites = sites.filter((s) => !s.is_adult);
+  }
+  
+  return sites.map((s) => ({
+    key: s.key,
+    name: s.name,
+    api: s.api,
+    detail: s.detail,
+  }));
+}
+
+// 根据用户设置动态获取可用资源站（你的想法实现）
+export async function getFilteredApiSites(userName?: string): Promise<ApiSite[]> {
+  const config = await getConfig();
+  
+  // 防御性检查：确保 SourceConfig 存在且为数组
+  if (!config.SourceConfig || !Array.isArray(config.SourceConfig)) {
+    console.warn('SourceConfig is missing or not an array, returning empty array');
+    return [];
+  }
+  
+  // 默认过滤成人内容
+  let shouldFilterAdult = true;
+  
+  // 如果提供了用户名，获取用户设置
+  if (userName) {
+    try {
+      const storage = getStorage();
+      const userSettings = await storage.getUserSettings(userName);
+      shouldFilterAdult = userSettings?.filter_adult_content !== false; // 默认为 true
+    } catch (error) {
+      // 获取用户设置失败时，默认过滤成人内容
+      console.warn('Failed to get user settings, using default filter:', error);
+    }
+  }
+  
+  // 防御性处理：为每个源确保 is_adult 字段存在
+  let sites = config.SourceConfig
+    .filter((s) => !s.disabled)
+    .map((s) => ({
+      ...s,
+      is_adult: s.is_adult === true // 严格检查，只有明确为 true 的才是成人内容
+    }));
+  
+  // 根据用户设置动态过滤成人内容源
+  if (shouldFilterAdult) {
     sites = sites.filter((s) => !s.is_adult);
   }
   

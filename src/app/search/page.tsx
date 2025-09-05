@@ -179,8 +179,9 @@ function SearchPageClient() {
         headers['Authorization'] = `Bearer ${authInfo.username}`;
       }
       
+      // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}`,
+        `/api/search?q=${encodeURIComponent(query.trim())}`, 
         { headers }
       );
       const data = await response.json();

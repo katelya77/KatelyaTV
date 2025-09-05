@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { getAdultApiSites, getAvailableApiSites, getCacheTime } from '@/lib/config';
+import { getCacheTime, getFilteredApiSites } from '@/lib/config';
 import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
-import { getStorage } from '@/lib/db';
 import { searchFromApi } from '@/lib/downstream';
 
 export const runtime = 'edge';
@@ -15,8 +14,15 @@ export async function OPTIONS() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
-  const includeAdult = searchParams.get('include_adult') === 'true';
-  const userName = searchParams.get('user'); // 用于获取用户设置
+  
+  // 从 Authorization header 或 query parameter 获取用户名
+  let userName: string | undefined = searchParams.get('user') || undefined;
+  if (!userName) {
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      userName = authHeader.substring(7);
+    }
+  }
 
   if (!query) {
     const cacheTime = await getCacheTime();
@@ -37,51 +43,34 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 获取用户设置以确定是否需要过滤成人内容
-    let shouldFilterAdult = true; // 默认过滤成人内容
+    // 使用新的动态过滤方法，根据用户设置自动过滤成人内容源
+    const availableSites = await getFilteredApiSites(userName);
     
-    if (userName) {
-      const storage = getStorage();
-      const userSettings = await storage.getUserSettings(userName);
-      shouldFilterAdult = userSettings?.filter_adult_content !== false;
+    if (!availableSites || availableSites.length === 0) {
+      const cacheTime = await getCacheTime();
+      const response = NextResponse.json({ 
+        regular_results: [], 
+        adult_results: [] 
+      }, {
+        headers: {
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        },
+      });
+      return addCorsHeaders(response);
     }
 
-      // 获取所有可用的API站点（不包含成人内容）
-  const regularSites = await getAvailableApiSites();
-  
-  if (!regularSites || regularSites.length === 0) {
-    const cacheTime = await getCacheTime();
-    const response = NextResponse.json({ 
-      regular_results: [], 
-      adult_results: [] 
-    }, {
-      headers: {
-        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
-        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
-      },
-    });
-    return addCorsHeaders(response);
-  }
+    // 搜索所有可用的资源站（已根据用户设置动态过滤）
+    const searchPromises = availableSites.map((site) => searchFromApi(site, query));
+    const searchResults = (await Promise.all(searchPromises)).flat();
 
-  // 搜索常规（非成人）内容
-  const regularSearchPromises = regularSites.map((site) => searchFromApi(site, query));
-  const regularResults = (await Promise.all(regularSearchPromises)).flat();
-
-  let adultResults: unknown[] = [];
-    
-    // 如果用户设置允许且明确请求包含成人内容，则搜索成人资源站
-    if (!shouldFilterAdult && includeAdult) {
-      const adultSites = await getAdultApiSites();
-      const adultSearchPromises = adultSites.map((site) => searchFromApi(site, query));
-      adultResults = (await Promise.all(adultSearchPromises)).flat();
-    }
-
+    // 所有结果都作为常规结果返回，因为成人内容源已经在源头被过滤掉了
     const cacheTime = await getCacheTime();
     const response = NextResponse.json(
       { 
-        regular_results: regularResults,
-        adult_results: adultResults
+        regular_results: searchResults,
+        adult_results: [] // 始终为空，因为成人内容在源头就被过滤了
       },
       {
         headers: {
