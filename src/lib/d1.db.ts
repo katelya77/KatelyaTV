@@ -447,7 +447,8 @@ export class D1Storage implements IStorage {
     try {
       const db = await this.getDatabase();
       const result = await db
-        .prepare('SELECT config FROM admin_config WHERE id = 1')
+        .prepare('SELECT config_value as config FROM admin_configs WHERE config_key = ? LIMIT 1')
+        .bind('main_config')
         .first<{ config: string }>();
 
       if (!result) return null;
@@ -464,9 +465,9 @@ export class D1Storage implements IStorage {
       const db = await this.getDatabase();
       await db
         .prepare(
-          'INSERT OR REPLACE INTO admin_config (id, config) VALUES (1, ?)'
+          'INSERT OR REPLACE INTO admin_configs (config_key, config_value, description) VALUES (?, ?, ?)'
         )
-        .bind(JSON.stringify(config))
+        .bind('main_config', JSON.stringify(config), '主要管理员配置')
         .run();
     } catch (err) {
       console.error('Failed to set admin config:', err);
