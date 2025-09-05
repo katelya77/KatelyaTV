@@ -1640,6 +1640,7 @@ function PlayPageClient() {
             >
               <EpisodeSelector
                 totalEpisodes={totalEpisodes}
+                episodesPerPage={50}
                 value={currentEpisodeIndex + 1}
                 onChange={handleEpisodeChange}
                 onSourceChange={handleSourceChange}

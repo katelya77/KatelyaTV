@@ -321,7 +321,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           </div>
 
           {/* 集数网格 */}
-          <div className='grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] justify-center gap-2 overflow-y-auto pb-4'>
+          <div className='grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-10 justify-center gap-1.5 overflow-y-auto pb-4'>
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
@@ -338,10 +338,10 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     e.stopPropagation();
                     handleEpisodeClick(episodeNumber);
                   }}
-                  className={`w-full h-10 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 cursor-pointer
+                  className={`w-full h-8 flex items-center justify-center text-xs font-medium rounded transition-all duration-200 cursor-pointer
                     ${
                       isActive
-                        ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'
+                        ? 'bg-green-500 text-white shadow-md shadow-green-500/25 dark:bg-green-600'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
                     }`.trim()}
                   type="button"
