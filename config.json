@@ -542,7 +542,7 @@
     },
     "qiqidys": {
       "api": "https://www.qiqidys.com/api.php/provide/vod/",
-      "name": "七七影视",
+      "name": "七七影视"
     },
     "hnzy": {
       "api": "https://hnzyapi.com/api.php/provide/vod",
