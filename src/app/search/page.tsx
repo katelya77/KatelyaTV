@@ -13,11 +13,10 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { SearchResult, SearchApiResponse, PaginationInfo } from '@/lib/types';
+import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
-import Pagination from '@/components/Pagination';
 
 function SearchPageClient() {
   // 搜索历史
@@ -31,13 +30,13 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  
+
   // 分组结果状态
   const [groupedResults, setGroupedResults] = useState<{
     regular: SearchResult[];
     adult: SearchResult[];
   } | null>(null);
-  
+
   // 分组标签页状态
   const [activeTab, setActiveTab] = useState<'regular' | 'adult'>('regular');
 
@@ -156,61 +155,62 @@ function SearchPageClient() {
   useEffect(() => {
     // 当搜索参数变化时更新搜索状态
     const query = searchParams.get('q');
-    const page = parseInt(searchParams.get('page') || '1');
-
     if (query) {
       setSearchQuery(query);
-      setCurrentPage(page);
-      fetchSearchResults(query, page);
+      fetchSearchResults(query);
 
       // 保存到搜索历史 (事件监听会自动更新界面)
       addSearchHistory(query);
     } else {
       setShowResults(false);
-      setCurrentPage(1);
     }
   }, [searchParams]);
 
-  const fetchSearchResults = async (query: string, page = 1) => {
+  const fetchSearchResults = async (query: string) => {
     try {
       setIsLoading(true);
-      
+
       // 获取用户认证信息
       const authInfo = getAuthInfoFromBrowserCookie();
-      
+
       // 构建请求头
       const headers: HeadersInit = {};
       if (authInfo?.username) {
-        headers['Authorization'] = `Bearer ${encodeURIComponent(authInfo.username)}`; // 修复中文用户名问题
+        headers['Authorization'] = `Bearer ${encodeURIComponent(
+          authInfo.username
+        )}`; // 修复中文用户名问题
       }
-      
+
       // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
       // 添加时间戳参数避免缓存问题
       const timestamp = Date.now();
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}&t=${timestamp}`, 
-        { 
+        `/api/search?q=${encodeURIComponent(query.trim())}&t=${timestamp}`,
+        {
           headers: {
             ...headers,
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
-          }
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          },
         }
       );
       const data = await response.json();
-      
+
       // 处理新的搜索结果格式
       if (data.regular_results || data.adult_results) {
         // 处理分组结果
         setGroupedResults({
           regular: data.regular_results || [],
-          adult: data.adult_results || []
+          adult: data.adult_results || [],
         });
-        setSearchResults([...(data.regular_results || []), ...(data.adult_results || [])]);
+        setSearchResults([
+          ...(data.regular_results || []),
+          ...(data.adult_results || []),
+        ]);
       } else if (data.grouped) {
         // 兼容旧的分组格式
         setGroupedResults({
           regular: data.regular || [],
-          adult: data.adult || []
+          adult: data.adult || [],
         });
         setSearchResults([...(data.regular || []), ...(data.adult || [])]);
       } else {
@@ -218,18 +218,11 @@ function SearchPageClient() {
         setGroupedResults(null);
         setSearchResults(data.results || []);
       }
+
       setShowResults(true);
     } catch (error) {
       setGroupedResults(null);
       setSearchResults([]);
-      setPagination({
-        page: 1,
-        pageSize: 20,
-        total: 0,
-        totalPages: 0,
-        hasNext: false,
-        hasPrev: false,
-      });
     } finally {
       setIsLoading(false);
     }
@@ -244,26 +237,13 @@ function SearchPageClient() {
     setSearchQuery(trimmed);
     setIsLoading(true);
     setShowResults(true);
-    setCurrentPage(1);
 
-    router.push(`/search?q=${encodeURIComponent(trimmed)}&page=1`);
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
     // 直接发请求
-    fetchSearchResults(trimmed, 1);
+    fetchSearchResults(trimmed);
 
     // 保存到搜索历史 (事件监听会自动更新界面)
     addSearchHistory(trimmed);
-  };
-
-  // 处理分页变化
-  const handlePageChange = (page: number) => {
-    const query = searchParams.get('q');
-    if (query) {
-      setCurrentPage(page);
-      router.push(`/search?q=${encodeURIComponent(query)}&page=${page}`);
-
-      // 滚动到页面顶部
-      scrollToTop();
-    }
   };
 
   // 返回顶部功能
@@ -310,16 +290,9 @@ function SearchPageClient() {
             <section className='mb-12'>
               {/* 标题 + 聚合开关 */}
               <div className='mb-8 flex items-center justify-between'>
-                <div className='flex items-center gap-4'>
-                  <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                    搜索结果
-                  </h2>
-                  {pagination.total > 0 && (
-                    <span className='text-sm text-gray-600 dark:text-gray-400'>
-                      共 {pagination.total} 个结果
-                    </span>
-                  )}
-                </div>
+                <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+                  搜索结果
+                </h2>
                 {/* 聚合开关 */}
                 <label className='flex items-center gap-2 cursor-pointer select-none'>
                   <span className='text-sm text-gray-700 dark:text-gray-300'>
@@ -339,12 +312,12 @@ function SearchPageClient() {
                   </div>
                 </label>
               </div>
-              
+
               {/* 如果有分组结果且有成人内容，显示分组标签 */}
               {groupedResults && groupedResults.adult.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="inline-flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <div className='mb-6'>
+                  <div className='flex items-center justify-center mb-4'>
+                    <div className='inline-flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg'>
                       <button
                         onClick={() => setActiveTab('regular')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -368,12 +341,12 @@ function SearchPageClient() {
                     </div>
                   </div>
                   {activeTab === 'adult' && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-lg">⚠️</span>
-                        <div className="text-sm text-red-600 dark:text-red-400 text-center">
-                          <div className="font-medium">成人内容警告</div>
-                          <div className="mt-1 opacity-90">
+                    <div className='mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md'>
+                      <div className='flex items-center justify-center gap-2'>
+                        <span className='text-lg'>⚠️</span>
+                        <div className='text-sm text-red-600 dark:text-red-400 text-center'>
+                          <div className='font-medium'>成人内容警告</div>
+                          <div className='mt-1 opacity-90'>
                             以下内容可能包含成人资源，请确保您已年满18周岁并同意查看此类内容
                           </div>
                         </div>
@@ -390,27 +363,30 @@ function SearchPageClient() {
                   // 确定要显示的结果
                   let displayResults = searchResults;
                   if (groupedResults && groupedResults.adult.length > 0) {
-                    displayResults = activeTab === 'adult' 
-                      ? groupedResults.adult 
-                      : groupedResults.regular;
+                    displayResults =
+                      activeTab === 'adult'
+                        ? groupedResults.adult
+                        : groupedResults.regular;
                   }
 
                   // 聚合显示模式
                   if (viewMode === 'agg') {
                     const aggregated = aggregateResults(displayResults);
-                    return aggregated.map(([mapKey, group]: [string, SearchResult[]]) => (
-                      <div key={`agg-${mapKey}`} className='w-full'>
-                        <VideoCard
-                          from='search'
-                          items={group}
-                          query={
-                            searchQuery.trim() !== group[0].title
-                              ? searchQuery.trim()
-                              : ''
-                          }
-                        />
-                      </div>
-                    ));
+                    return aggregated.map(
+                      ([mapKey, group]: [string, SearchResult[]]) => (
+                        <div key={`agg-${mapKey}`} className='w-full'>
+                          <VideoCard
+                            from='search'
+                            items={group}
+                            query={
+                              searchQuery.trim() !== group[0].title
+                                ? searchQuery.trim()
+                                : ''
+                            }
+                          />
+                        </div>
+                      )
+                    );
                   }
 
                   // 列表显示模式
@@ -445,20 +421,6 @@ function SearchPageClient() {
                   </div>
                 )}
               </div>
-
-              {/* 分页组件 */}
-              {pagination.totalPages > 1 && (
-                <div className='mt-8 sm:mt-12 flex justify-center overflow-x-auto'>
-                  <Pagination
-                    currentPage={pagination.page}
-                    totalPages={pagination.totalPages}
-                    hasNext={pagination.hasNext}
-                    hasPrev={pagination.hasPrev}
-                    onPageChange={handlePageChange}
-                    className='min-w-fit'
-                  />
-                </div>
-              )}
             </section>
           ) : searchHistory.length > 0 ? (
             // 搜索历史
@@ -483,7 +445,7 @@ function SearchPageClient() {
                       onClick={() => {
                         setSearchQuery(item);
                         router.push(
-                          `/search?q=${encodeURIComponent(item.trim())}&page=1`
+                          `/search?q=${encodeURIComponent(item.trim())}`
                         );
                       }}
                       className='px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'
