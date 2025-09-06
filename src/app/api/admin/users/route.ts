@@ -2,9 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getStorage } from '@/lib/db';
+
 import { User } from '@/lib/types';
 
 export const runtime = 'edge';
+
 
 // 检查是否为站长账户
 function isOwnerAccount(username: string): boolean {
@@ -29,7 +31,9 @@ export async function GET(request: NextRequest) {
 
     // 获取所有用户及其设置
     const storage = getStorage();
+
     const users: User[] = await storage.getAllUsers();
+
     const usersWithSettings = await Promise.all(
       users.map(async (user) => {
         const settings = await storage.getUserSettings(user.username);

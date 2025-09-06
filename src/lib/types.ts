@@ -101,6 +101,13 @@ export interface IStorage {
   setAdminConfig(config: AdminConfig): Promise<void>;
 }
 
+// 用户数据结构
+export interface User {
+  username: string;
+  role?: string;
+  created_at?: string;
+}
+
 // 搜索结果数据结构
 export interface SearchResult {
   id: string;
@@ -114,6 +121,22 @@ export interface SearchResult {
   desc?: string;
   type_name?: string;
   douban_id?: number;
+}
+
+// 分页信息
+export interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// 搜索API响应结构
+export interface SearchApiResponse {
+  results: SearchResult[];
+  pagination: PaginationInfo;
 }
 
 // 豆瓣数据结构

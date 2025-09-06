@@ -5,7 +5,7 @@ import { D1Storage } from './d1.db';
 import { KvrocksStorage } from './kvrocks.db';
 import { LocalStorage } from './localstorage.db';
 import { RedisStorage } from './redis.db';
-import { Favorite, IStorage, PlayRecord } from './types';
+import { Favorite, IStorage, PlayRecord, User } from './types';
 import { UpstashRedisStorage } from './upstash.db';
 
 // storage type 常量: 'localstorage' | 'redis' | 'kvrocks' | 'd1' | 'upstash'，默认 'localstorage'
@@ -180,8 +180,8 @@ export class DbManager {
     await this.storage.deleteSearchHistory(userName, keyword);
   }
 
-  // 获取全部用户名
-  async getAllUsers(): Promise<string[]> {
+  // 获取全部用户
+  async getAllUsers(): Promise<User[]> {
     if (typeof (this.storage as any).getAllUsers === 'function') {
       return (this.storage as any).getAllUsers();
     }

@@ -131,7 +131,6 @@ const TopNavbar = ({ activePath = '/' }: { activePath?: string }) => {
                     </button>
                   );
                 }
-
                 return (
                   <Link
                     key={item.label}
@@ -171,7 +170,6 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
 
       {/* 桌面端顶部导航栏 (fixed) */}
       <TopNavbar activePath={activePath} />
-
   {/* 主内容区域 - 预留桌面端顶部导航高度 64px */}
   <div className='relative min-w-0 transition-all duration-300 md:pt-16'>
         {/* 桌面端左上角返回按钮 */}

@@ -30,13 +30,13 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  
+
   // 分组结果状态
   const [groupedResults, setGroupedResults] = useState<{
     regular: SearchResult[];
     adult: SearchResult[];
   } | null>(null);
-  
+
   // 分组标签页状态
   const [activeTab, setActiveTab] = useState<'regular' | 'adult'>('regular');
 
@@ -169,43 +169,48 @@ function SearchPageClient() {
   const fetchSearchResults = async (query: string) => {
     try {
       setIsLoading(true);
-      
+
       // 获取用户认证信息
       const authInfo = getAuthInfoFromBrowserCookie();
-      
+
       // 构建请求头
       const headers: HeadersInit = {};
       if (authInfo?.username) {
-        headers['Authorization'] = `Bearer ${authInfo.username}`;
+        headers['Authorization'] = `Bearer ${encodeURIComponent(
+          authInfo.username
+        )}`; // 修复中文用户名问题
       }
-      
+
       // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
       // 添加时间戳参数避免缓存问题
       const timestamp = Date.now();
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}&t=${timestamp}`, 
-        { 
+        `/api/search?q=${encodeURIComponent(query.trim())}&t=${timestamp}`,
+        {
           headers: {
             ...headers,
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
-          }
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          },
         }
       );
       const data = await response.json();
-      
+
       // 处理新的搜索结果格式
       if (data.regular_results || data.adult_results) {
         // 处理分组结果
         setGroupedResults({
           regular: data.regular_results || [],
-          adult: data.adult_results || []
+          adult: data.adult_results || [],
         });
-        setSearchResults([...(data.regular_results || []), ...(data.adult_results || [])]);
+        setSearchResults([
+          ...(data.regular_results || []),
+          ...(data.adult_results || []),
+        ]);
       } else if (data.grouped) {
         // 兼容旧的分组格式
         setGroupedResults({
           regular: data.regular || [],
-          adult: data.adult || []
+          adult: data.adult || [],
         });
         setSearchResults([...(data.regular || []), ...(data.adult || [])]);
       } else {
@@ -213,7 +218,7 @@ function SearchPageClient() {
         setGroupedResults(null);
         setSearchResults(data.results || []);
       }
-      
+
       setShowResults(true);
     } catch (error) {
       setGroupedResults(null);
@@ -307,12 +312,12 @@ function SearchPageClient() {
                   </div>
                 </label>
               </div>
-              
+
               {/* 如果有分组结果且有成人内容，显示分组标签 */}
               {groupedResults && groupedResults.adult.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="inline-flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <div className='mb-6'>
+                  <div className='flex items-center justify-center mb-4'>
+                    <div className='inline-flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg'>
                       <button
                         onClick={() => setActiveTab('regular')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -336,10 +341,16 @@ function SearchPageClient() {
                     </div>
                   </div>
                   {activeTab === 'adult' && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-                      <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                        ⚠️ 以下内容可能包含成人资源，请确保您已年满18周岁
-                      </p>
+                    <div className='mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md'>
+                      <div className='flex items-center justify-center gap-2'>
+                        <span className='text-lg'>⚠️</span>
+                        <div className='text-sm text-red-600 dark:text-red-400 text-center'>
+                          <div className='font-medium'>成人内容警告</div>
+                          <div className='mt-1 opacity-90'>
+                            以下内容可能包含成人资源，请确保您已年满18周岁并同意查看此类内容
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -352,27 +363,30 @@ function SearchPageClient() {
                   // 确定要显示的结果
                   let displayResults = searchResults;
                   if (groupedResults && groupedResults.adult.length > 0) {
-                    displayResults = activeTab === 'adult' 
-                      ? groupedResults.adult 
-                      : groupedResults.regular;
+                    displayResults =
+                      activeTab === 'adult'
+                        ? groupedResults.adult
+                        : groupedResults.regular;
                   }
 
                   // 聚合显示模式
                   if (viewMode === 'agg') {
                     const aggregated = aggregateResults(displayResults);
-                    return aggregated.map(([mapKey, group]: [string, SearchResult[]]) => (
-                      <div key={`agg-${mapKey}`} className='w-full'>
-                        <VideoCard
-                          from='search'
-                          items={group}
-                          query={
-                            searchQuery.trim() !== group[0].title
-                              ? searchQuery.trim()
-                              : ''
-                          }
-                        />
-                      </div>
-                    ));
+                    return aggregated.map(
+                      ([mapKey, group]: [string, SearchResult[]]) => (
+                        <div key={`agg-${mapKey}`} className='w-full'>
+                          <VideoCard
+                            from='search'
+                            items={group}
+                            query={
+                              searchQuery.trim() !== group[0].title
+                                ? searchQuery.trim()
+                                : ''
+                            }
+                          />
+                        </div>
+                      )
+                    );
                   }
 
                   // 列表显示模式

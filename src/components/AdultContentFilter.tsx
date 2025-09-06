@@ -15,6 +15,7 @@ const AdultContentFilter: React.FC<AdultContentFilterProps> = ({
   const [isEnabled, setIsEnabled] = useState(true); // 默认开启过滤
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false); // 是否为站长
 
   // 获取用户设置
   useEffect(() => {
@@ -24,13 +25,14 @@ const AdultContentFilter: React.FC<AdultContentFilterProps> = ({
       try {
         const response = await fetch('/api/user/settings', {
           headers: {
-            'Authorization': `Bearer ${userName}`,
+            'Authorization': `Bearer ${encodeURIComponent(userName)}`, // 修复中文用户名问题
           },
         });
         
         if (response.ok) {
           const data = await response.json();
           setIsEnabled(data.settings.filter_adult_content);
+          setIsOwner(data.isOwner || false); // 获取站长状态
         } else {
           setError('获取用户设置失败');
         }
@@ -56,7 +58,7 @@ const AdultContentFilter: React.FC<AdultContentFilterProps> = ({
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userName}`,
+          'Authorization': `Bearer ${encodeURIComponent(userName)}`, // 修复中文用户名问题
         },
         body: JSON.stringify({
           settings: {
@@ -73,7 +75,7 @@ const AdultContentFilter: React.FC<AdultContentFilterProps> = ({
         try {
           await fetch('/api/search?q=_cache_refresh_', {
             headers: {
-              'Authorization': `Bearer ${userName}`,
+              'Authorization': `Bearer ${encodeURIComponent(userName)}`,
             },
           });
         } catch {
@@ -106,13 +108,18 @@ const AdultContentFilter: React.FC<AdultContentFilterProps> = ({
             )}
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
               成人内容过滤
+              {isOwner && (
+                <span className="px-2 py-1 text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 rounded-full">
+                  站长
+                </span>
+              )}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {isEnabled 
-                ? '已开启过滤，将自动隐藏所有标记为"成人"的资源站及其内容' 
-                : '已关闭过滤，成人内容将在搜索结果中单独分组显示'
+                ? `已开启过滤，将自动隐藏所有标记为"成人"的资源站及其内容${isOwner ? '（站长可自由切换）' : ''}` 
+                : `已关闭过滤，成人内容将在搜索结果中单独分组显示${isOwner ? '（仅限站长）' : ''}`
               }
             </p>
           </div>

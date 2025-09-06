@@ -1095,7 +1095,7 @@ function PlayPageClient() {
         isLive: false,
         muted: false,
         autoplay: true,
-        pip: true,
+        pip: false, // 画中画
         autoSize: false,
         autoMini: false,
         screenshot: false,

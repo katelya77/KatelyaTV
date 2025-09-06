@@ -304,6 +304,7 @@ export class RedisStorage implements IStorage {
   // ---------- 获取全部用户 ----------
   async getAllUsers(): Promise<User[]> {
     const keys = await withRetry(() => this.client.keys('u:*:pwd'));
+
     const ownerUsername = process.env.USERNAME || 'admin';
     
     const usernames = keys
@@ -335,7 +336,6 @@ export class RedisStorage implements IStorage {
         };
       })
     );
-
     return users;
   }
 
