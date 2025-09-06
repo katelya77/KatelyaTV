@@ -42,6 +42,13 @@ export interface Favorite {
   search_title: string; // 搜索时使用的标题
 }
 
+// 用户数据结构
+export interface User {
+  username: string;
+  role?: string;
+  created_at?: string;
+}
+
 // 存储接口
 export interface IStorage {
   // 播放记录相关

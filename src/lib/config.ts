@@ -225,19 +225,24 @@ async function initConfig() {
 
 export async function getConfig(): Promise<AdminConfig> {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
+  
   if (process.env.DOCKER_ENV === 'true' || storageType === 'localstorage') {
     await initConfig();
     return cachedConfig;
   }
+  
   // 非 docker 环境且 DB 存储，直接读 db 配置
-  const storage = getStorage();
-  let adminConfig: AdminConfig | null = null;
-  if (storage && typeof (storage as any).getAdminConfig === 'function') {
-    adminConfig = await (storage as any).getAdminConfig();
-  }
-  if (adminConfig) {
-    // 合并一些环境变量配置
-    adminConfig.SiteConfig.SiteName = process.env.SITE_NAME || 'KatelyaTV';
+  try {
+    const storage = getStorage();
+    let adminConfig: AdminConfig | null = null;
+    
+    if (storage && typeof (storage as any).getAdminConfig === 'function') {
+      adminConfig = await (storage as any).getAdminConfig();
+    }
+    
+    if (adminConfig) {
+      // 合并一些环境变量配置
+      adminConfig.SiteConfig.SiteName = process.env.SITE_NAME || 'KatelyaTV';
     adminConfig.SiteConfig.Announcement =
       process.env.ANNOUNCEMENT ||
       '本网站仅提供影视信息搜索服务，所有内容均来自第三方网站。本站不存储任何视频资源，不对任何内容的准确性、合法性、完整性负责。';
@@ -306,6 +311,11 @@ export async function getConfig(): Promise<AdminConfig> {
     await initConfig();
   }
   return cachedConfig;
+  } catch (error) {
+    // 如果数据库访问失败，回退到默认配置
+    await initConfig();
+    return cachedConfig;
+  }
 }
 
 export async function resetConfig() {

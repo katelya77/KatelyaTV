@@ -39,7 +39,21 @@ interface D1ExecResult {
 
 // 获取全局D1数据库实例
 function getD1Database(): D1Database {
-  return (process.env as any).DB as D1Database;
+  // 在 Cloudflare Pages 环境中，DB 通过全局绑定可用
+  if (typeof globalThis !== 'undefined') {
+    // 尝试直接访问全局 DB
+    const globalDB = (globalThis as any).DB;
+    if (globalDB) {
+      return globalDB as D1Database;
+    }
+  }
+  
+  // 回退到 process.env（用于本地开发）
+  if (process.env.DB) {
+    return (process.env as any).DB as D1Database;
+  }
+  
+  throw new Error('D1 database not available');
 }
 
 export class D1Storage implements IStorage {
@@ -432,12 +446,14 @@ export class D1Storage implements IStorage {
     try {
       const db = await this.getDatabase();
       const result = await db
-        .prepare('SELECT username, role, created_at FROM users ORDER BY created_at ASC')
-        .all<{ username: string; role?: string; created_at?: string }>();
+        .prepare('SELECT username, created_at FROM users ORDER BY created_at ASC')
+        .all<{ username: string; created_at: string }>();
 
+      const ownerUsername = process.env.USERNAME || 'admin';
+      
       return result.results.map((row) => ({
         username: row.username,
-        role: row.role,
+        role: row.username === ownerUsername ? 'owner' : 'user',
         created_at: row.created_at
       }));
     } catch (err) {

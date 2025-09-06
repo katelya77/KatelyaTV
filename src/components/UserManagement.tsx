@@ -3,7 +3,34 @@
 
 import { useEffect, useState } from 'react';
 
-import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
+// 临时内联认证函数，避免导入问题
+function getAuthInfoFromBrowserCookie(): {
+  password?: string;
+  username?: string;
+  signature?: string;
+  timestamp?: number;
+} | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const cookies = document.cookie.split(';');
+  const authCookie = cookies.find(cookie => cookie.trim().startsWith('auth='));
+  
+  if (!authCookie) {
+    return null;
+  }
+
+  try {
+    const cookieValue = authCookie.split('=')[1];
+    const decoded = decodeURIComponent(cookieValue);
+    const authData = JSON.parse(decoded);
+    return authData;
+  } catch (error) {
+    console.error('Failed to parse auth cookie:', error);
+    return null;
+  }
+}
 
 interface UserInfo {
   username: string;

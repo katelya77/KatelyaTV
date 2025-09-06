@@ -14,12 +14,19 @@ const inter = Inter({ subsets: ['latin'] });
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {
   let siteName = process.env.SITE_NAME || 'KatelyaTV';
-  if (
-    process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1' &&
-    process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'upstash'
-  ) {
-    const config = await getConfig();
-    siteName = config.SiteConfig.SiteName;
+  
+  try {
+    // 只有在非 d1 和 upstash 存储类型时才尝试获取配置
+    if (
+      process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1' &&
+      process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'upstash'
+    ) {
+      const config = await getConfig();
+      siteName = config.SiteConfig.SiteName;
+    }
+  } catch (error) {
+    // 如果配置获取失败，使用默认站点名称
+    // siteName 已经有默认值，不需要额外处理
   }
 
   return {

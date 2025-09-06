@@ -304,20 +304,38 @@ export class RedisStorage implements IStorage {
   // ---------- 获取全部用户 ----------
   async getAllUsers(): Promise<User[]> {
     const keys = await withRetry(() => this.client.keys('u:*:pwd'));
-    const users: User[] = [];
+
+    const ownerUsername = process.env.USERNAME || 'admin';
     
-    for (const k of keys) {
-      const match = k.match(/^u:(.+?):pwd$/);
-      if (match) {
-        const username = ensureString(match[1]);
-        users.push({
+    const usernames = keys
+      .map((k) => {
+        const match = k.match(/^u:(.+?):pwd$/);
+        return match ? ensureString(match[1]) : undefined;
+      })
+      .filter((u): u is string => typeof u === 'string');
+
+    // 获取用户创建时间并构造 User 对象
+    const users = await Promise.all(
+      usernames.map(async (username) => {
+        // 尝试获取用户创建时间，如果没有则使用空字符串
+        const createdAtKey = `u:${username}:created_at`;
+        let created_at = '';
+        try {
+          const timestamp = await withRetry(() => this.client.get(createdAtKey));
+          if (timestamp) {
+            created_at = new Date(parseInt(timestamp)).toISOString();
+          }
+        } catch (err) {
+          // 忽略错误，使用空字符串
+        }
+
+        return {
           username,
-          role: username === (process.env.USERNAME || 'admin') ? 'owner' : 'user',
-          created_at: new Date().toISOString()
-        });
-      }
-    }
-    
+          role: username === ownerUsername ? 'owner' : 'user',
+          created_at
+        };
+      })
+    );
     return users;
   }
 

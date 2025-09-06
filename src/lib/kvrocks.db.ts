@@ -268,16 +268,28 @@ export class KvrocksStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     const usernames = await withRetry(() => this.client.sMembers(this.userListKey()));
-    const users: User[] = [];
+    const ownerUsername = process.env.USERNAME || 'admin';
     
-    for (const username of ensureStringArray(usernames)) {
-      users.push({
-        username,
-        role: username === (process.env.USERNAME || 'admin') ? 'owner' : 'user',
-        created_at: new Date().toISOString()
-      });
-    }
-    
+    const users = await Promise.all(
+      usernames.map(async (username) => {
+        let created_at = '';
+        try {
+          const userData = await this.getUser(username);
+          if (userData?.created_at) {
+            created_at = new Date(userData.created_at).toISOString();
+          }
+        } catch (err) {
+          // 忽略错误，使用空字符串
+        }
+
+        return {
+          username,
+          role: username === ownerUsername ? 'owner' : 'user',
+          created_at
+        };
+      })
+    );
+
     return users;
   }
 

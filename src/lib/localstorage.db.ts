@@ -347,15 +347,31 @@ export class LocalStorage implements IStorage {
     try {
       const users: User[] = [];
       const prefix = 'katelyatv_user_';
+      const ownerUsername = process.env.USERNAME || 'admin';
       
       for (let i = 0; i < localStorage.length; i++) {
         const storageKey = localStorage.key(i);
         if (storageKey && storageKey.startsWith(prefix)) {
-          const userName = storageKey.replace(prefix, '');
+          const username = storageKey.replace(prefix, '');
+          
+          // 尝试获取用户创建时间
+          let created_at = '';
+          try {
+            const userDataStr = localStorage.getItem(storageKey);
+            if (userDataStr) {
+              const userData = JSON.parse(userDataStr);
+              if (userData.created_at) {
+                created_at = new Date(userData.created_at).toISOString();
+              }
+            }
+          } catch (err) {
+            // 忽略解析错误
+          }
+          
           users.push({
-            username: userName,
-            role: userName === (process.env.USERNAME || 'admin') ? 'owner' : 'user',
-            created_at: new Date().toISOString() // LocalStorage doesn't store creation time
+            username,
+            role: username === ownerUsername ? 'owner' : 'user',
+            created_at
           });
         }
       }
