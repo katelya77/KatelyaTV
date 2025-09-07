@@ -1,49 +1,19 @@
 name = "katelyatv"
-compatibility_date = "2024-09-01"
+compatibility_date = "2023-12-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".vercel/output/static"
 
-# 生产环境配置
-[env.production]
-name = "katelyatv"
-
-# 生产环境 D1 数据库配置
-[[env.production.d1_databases]]
+[[d1_databases]]
 binding = "katelyatv_db"
 database_name = "katelyatv-db"
-database_id = "4b41052c-ae4b-43fa-b725-ca9442eb31c3"
+database_id = "4b41052c-ae4b-43fa-b725-ca9442eb31c3"  # 替换为步骤1中获得的ID
 
-# 生产环境变量
-[env.production.vars]
+[build]
+command = "pnpm install --frozen-lockfile && pnpm run pages:build"
+
+[[build.environment_variables]]
 NEXT_PUBLIC_STORAGE_TYPE = "d1"
-NEXT_PUBLIC_SITE_NAME = "KatelyaTV"
-NEXT_PUBLIC_SITE_DESCRIPTION = "高性能影视播放平台"
-NEXTAUTH_URL = "https://tv.raorin.com"
-IMAGE_PROXY_ENABLED = "true"
-CACHE_TTL = "3600"
-CORS_ORIGIN = "*"
-RATE_LIMIT_MAX = "100"
-RATE_LIMIT_WINDOW = "60000"
-HEALTH_CHECK_ENABLED = "true"
-HEALTH_CHECK_INTERVAL = "30"
-LOG_LEVEL = "info"
-LOG_FORMAT = "json"
-NODE_ENV = "production"
 
-# 预览环境配置
-[env.preview]
-name = "katelyatv-preview"
-
-# 预览环境 D1 数据库配置
-[[env.preview.d1_databases]]
-binding = "katelyatv_db"
-database_name = "katelyatv-db"
-database_id = "4b41052c-ae4b-43fa-b725-ca9442eb31c3"
-
-# 预览环境变量
-[env.preview.vars]
-NEXT_PUBLIC_STORAGE_TYPE = "d1"
-NEXT_PUBLIC_SITE_NAME = "KatelyaTV"
-NEXT_PUBLIC_SITE_DESCRIPTION = "高性能影视播放平台"
-IMAGE_PROXY_ENABLED = "true"
-NODE_ENV = "production"
+[vars]
+USERNAME = "admin"
+PASSWORD = "108198.com"
+NEXT_PUBLIC_ENABLE_REGISTER = "true"
