@@ -11,14 +11,15 @@ name = "katelyatv"
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "katelyatv-db"
-database_id = "6d580637-1f87-4ddf-8b4d-3d97254b4c33"
+database_id = "0491edd5-6d9e-4ebc-9ccd-66041351abec"
 
 # 生产环境变量
 [env.production.vars]
 NEXT_PUBLIC_STORAGE_TYPE = "d1"
 NEXT_PUBLIC_SITE_NAME = "KatelyaTV"
 NEXT_PUBLIC_SITE_DESCRIPTION = "高性能影视播放平台"
-NEXTAUTH_URL = "https://your-domain.pages.dev"
+NEXTAUTH_SECRET = "your_nextauth_secret_here_32_chars_min"
+NEXTAUTH_URL = "https://katelyatv-1vd.pages.dev"
 IMAGE_PROXY_ENABLED = "true"
 CACHE_TTL = "3600"
 CORS_ORIGIN = "*"
@@ -29,6 +30,7 @@ HEALTH_CHECK_INTERVAL = "30"
 LOG_LEVEL = "info"
 LOG_FORMAT = "json"
 NODE_ENV = "production"
+D1_DATABASE_BINDING = "DB"
 
 # 预览环境配置
 [env.preview]
@@ -38,7 +40,7 @@ name = "katelyatv-preview"
 [[env.preview.d1_databases]]
 binding = "DB"
 database_name = "katelyatv-db"
-database_id = "6d580637-1f87-4ddf-8b4d-3d97254b4c33"
+database_id = "0491edd5-6d9e-4ebc-9ccd-66041351abec"
 
 # 预览环境变量
 [env.preview.vars]
