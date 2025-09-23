@@ -1,6 +1,6 @@
 # Kvrocks 部署指南
 
-本文档介绍如何使用 Docker + Kvrocks 部署 KatelyaTV。
+本文档介绍如何使用 Docker + Kvrocks 部署 SHTTV。
 
 > **⚠️ 重要提醒**：Kvrocks 部署需要配置管理员账号（`USERNAME` 和 `PASSWORD`），否则会出现"页面显示账号密码登录但无法登录"的问题！
 

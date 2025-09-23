@@ -40,10 +40,10 @@ body-template: |
   查看 [CHANGELOG.md](CHANGELOG.md) 了解详细的更新历史。
 
   ### 🔗 相关链接
-  - [项目主页](https://github.com/katelya77/KatelyaTV)
+  - [项目主页](https://github.com/katelya77/SHTTV)
   - [在线演示](https://katelyatv.vercel.app)
-  - [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
-  - [功能建议](https://github.com/katelya77/KatelyaTV/discussions)
+  - [问题反馈](https://github.com/katelya77/SHTTV/issues)
+  - [功能建议](https://github.com/katelya77/SHTTV/discussions)
 
 # 发布配置
 prerelease: false
@@ -152,7 +152,7 @@ template: |
 
   ## 🔗 相关资源
 
-  - [项目文档](https://github.com/katelya77/KatelyaTV#readme)
-  - [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
-  - [功能讨论](https://github.com/katelya77/KatelyaTV/discussions)
-  - [贡献指南](https://github.com/katelya77/KatelyaTV/blob/main/CONTRIBUTING.md)
+  - [项目文档](https://github.com/gufengyouqi/KatelyaTV#readme)
+  - [问题反馈](https://github.com/gufengyouqi/KatelyaTV/issues)
+  - [功能讨论](https://github.com/gufengyouqi/KatelyaTV/discussions)
+  - [贡献指南](https://github.com/gufengyouqi/KatelyaTV/blob/main/CONTRIBUTING.md)

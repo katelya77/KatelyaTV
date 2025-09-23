@@ -81,4 +81,4 @@ if (!hasPnpm && hasNpm) {
   console.log('   corepack enable && corepack prepare pnpm@latest --activate  # 通过corepack');
 }
 
-console.log('\n✨ KatelyaTV 支持智能包管理器检测，任何包管理器都可以正常工作！');
+console.log('\n✨ SHTTV 支持智能包管理器检测，任何包管理器都可以正常工作！');

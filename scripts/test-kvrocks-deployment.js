@@ -191,9 +191,9 @@ async function testDockerServices() {
         }
         
         if (output.includes('katelyatv') && output.includes('Up')) {
-          logTest('Docker KatelyaTV 服务', 'PASS', '服务运行中');
+          logTest('Docker SHTTV 服务', 'PASS', '服务运行中');
         } else {
-          logTest('Docker KatelyaTV 服务', 'FAIL', '服务未运行或未启动');
+          logTest('Docker SHTTV 服务', 'FAIL', '服务未运行或未启动');
         }
       } else {
         logTest('Docker 服务检查', 'FAIL', 'docker-compose 命令执行失败');

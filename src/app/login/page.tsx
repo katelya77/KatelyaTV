@@ -34,7 +34,7 @@ function VersionDisplay() {
     <button
       onClick={() =>
         window.open(
-          process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/katelya77/KatelyaTV',
+          process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/gufengyouqi/KatelyaTV',
           '_blank'
         )
       }
@@ -78,6 +78,7 @@ function LoginPageClient() {
   const [loading, setLoading] = useState(false);
   const [shouldAskUsername, setShouldAskUsername] = useState(false);
   const [enableRegister, setEnableRegister] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null); // 添加用户名错误状态
   const { siteName } = useSite();
 
   // 在客户端挂载后设置配置
@@ -91,11 +92,47 @@ function LoginPageClient() {
     }
   }, []);
 
+  // 邮箱格式校验函数
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) && email.length <= 50;
+  };
+
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUsername(value);
+    
+    // 实时校验邮箱格式和长度
+    if (value && !validateEmail(value)) {
+      if (value.length > 50) {
+        setUsernameError('邮箱地址长度不能超过50个字符');
+      } else {
+        setUsernameError('请输入有效的邮箱地址');
+      }
+    } else {
+      setUsernameError(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
-    if (!password || (shouldAskUsername && !username)) return;
+    // 提交前校验
+    if (shouldAskUsername && !username) {
+      setUsernameError('请输入邮箱地址');
+      return;
+    }
+    
+    if (shouldAskUsername && !validateEmail(username)) {
+      setUsernameError('请输入有效的邮箱地址（长度不超过50个字符）');
+      return;
+    }
+
+    if (!password) {
+      setError('请输入密码');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -127,7 +164,22 @@ function LoginPageClient() {
   // 处理注册逻辑
   const handleRegister = async () => {
     setError(null);
-    if (!password || !username) return;
+    
+    // 注册前校验
+    if (!username) {
+      setUsernameError('请输入邮箱地址');
+      return;
+    }
+    
+    if (!validateEmail(username)) {
+      setUsernameError('请输入有效的邮箱地址（长度不超过50个字符）');
+      return;
+    }
+
+    if (!password) {
+      setError('请输入密码');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -186,11 +238,18 @@ function LoginPageClient() {
                   id='username'
                   type='text'
                   autoComplete='username'
-                  className='block w-full rounded-lg border-0 py-3 px-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-gray-300 dark:ring-gray-600 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 focus:outline-none sm:text-base bg-white dark:bg-zinc-800'
-                  placeholder='输入用户名'
+                  className={`block w-full rounded-lg border-0 py-3 px-4 text-gray-900 dark:text-gray-100 shadow-sm ring-1 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:outline-none sm:text-base bg-white dark:bg-zinc-800 ${
+                    usernameError
+                      ? 'ring-red-500 dark:ring-red-500' // 错误状态样式
+                      : 'ring-gray-300 dark:ring-gray-600 focus:ring-purple-500' // 正常状态样式
+                  }`}
+                  placeholder='输入邮箱地址'
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={handleUsernameChange}
                 />
+                {usernameError && (
+                  <p className='mt-2 text-sm text-red-600 dark:text-red-500'>{usernameError}</p>
+                )}
               </div>
             )}
 
@@ -219,7 +278,7 @@ function LoginPageClient() {
                 <button
                   type='button'
                   onClick={handleRegister}
-                  disabled={!password || !username || loading}
+                  disabled={!password || !username || !!usernameError || loading}
                   className='flex-1 inline-flex justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50'
                 >
                   {loading ? '注册中...' : '注册'}
@@ -227,7 +286,7 @@ function LoginPageClient() {
                 <button
                   type='submit'
                   disabled={
-                    !password || loading || (shouldAskUsername && !username)
+                    !password || loading || (shouldAskUsername && (!username || !!usernameError))
                   }
                   className='flex-1 inline-flex justify-center rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50'
                 >
@@ -238,7 +297,7 @@ function LoginPageClient() {
               <button
                 type='submit'
                 disabled={
-                  !password || loading || (shouldAskUsername && !username)
+                  !password || loading || (shouldAskUsername && (!username || !!usernameError))
                 }
                 className='inline-flex w-full justify-center rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50'
               >

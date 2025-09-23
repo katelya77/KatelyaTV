@@ -29,7 +29,7 @@
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* KatelyaTV Logo 彩虹渐变动画 - 简化版本 */
+/* SHTTV Logo 彩虹渐变动画 - 简化版本 */
 .katelya-logo {
   background: linear-gradient(
     45deg,
@@ -62,7 +62,7 @@
   }
 }
 
-/* 主内容区大型 KatelyaTV Logo 容器 */
+/* 主内容区大型 SHTTV Logo 容器 */
 .main-logo-container {
   padding: 3rem 0 4rem 0;
   display: flex;
@@ -297,7 +297,7 @@
   }
 }
 
-/* 底部 KatelyaTV Logo 容器 */
+/* 底部 SHTTV Logo 容器 */
 .bottom-logo-container {
   padding: 2rem 0;
   display: flex;

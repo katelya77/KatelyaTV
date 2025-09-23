@@ -2,13 +2,13 @@
 
 ## 📺 功能介绍
 
-KatelyaTV 现在支持 TVBox 配置接口，可以将您的视频源直接导入到 TVBox 应用中使用。这个功能会自动同步 KatelyaTV 中配置的所有视频源，并提供标准的 TVBox JSON 格式配置。
+SHTTV 现在支持 TVBox 配置接口，可以将您的视频源直接导入到 TVBox 应用中使用。这个功能会自动同步 SHTTV 中配置的所有视频源，并提供标准的 TVBox JSON 格式配置。
 
 ## 🚀 快速开始
 
 ### 1. 访问配置页面
 
-在 KatelyaTV 网站中，点击左侧导航栏的"TVBox 配置"菜单，或直接访问：
+在 SHTTV 网站中，点击左侧导航栏的"TVBox 配置"菜单，或直接访问：
 
 ```
 https://your-domain.com/config
@@ -48,7 +48,7 @@ https://your-domain.com/api/tvbox?format=base64
 
 ### 🖥️ 配置页面功能
 
-KatelyaTV 提供了直观的 TVBox 配置管理界面：
+SHTTV 提供了直观的 TVBox 配置管理界面：
 
 - **格式切换**：支持 JSON 和 Base64 两种格式切换
 - **一键复制**：点击复制按钮快速获取配置链接
@@ -57,7 +57,7 @@ KatelyaTV 提供了直观的 TVBox 配置管理界面：
 
 ### 📋 支持的功能
 
-- ✅ 自动同步 KatelyaTV 的所有视频源
+- ✅ 自动同步 SHTTV 的所有视频源
 - ✅ 支持搜索功能
 - ✅ 支持快速搜索
 - ✅ 支持分类筛选
@@ -67,7 +67,7 @@ KatelyaTV 提供了直观的 TVBox 配置管理界面：
 
 ### 内置解析接口
 
-KatelyaTV 提供内置的视频解析服务：
+SHTTV 提供内置的视频解析服务：
 
 ```
 https://your-domain.com/api/parse?url={视频地址}
@@ -144,7 +144,7 @@ https://your-domain.com/api/parse?url={视频地址}
 
 ## 🔄 配置更新
 
-当您在 KatelyaTV 中添加、修改或删除视频源时：
+当您在 SHTTV 中添加、修改或删除视频源时：
 
 1. TVBox 配置会自动同步最新的源站信息
 2. 在 TVBox 中刷新配置即可获取最新源站
@@ -152,7 +152,7 @@ https://your-domain.com/api/parse?url={视频地址}
 
 ## ⚠️ 注意事项
 
-1. **网络要求**：确保 TVBox 设备能够访问您的 KatelyaTV 服务器
+1. **网络要求**：确保 TVBox 设备能够访问您的 SHTTV 服务器
 2. **HTTPS 支持**：建议使用 HTTPS 协议确保安全性
 3. **缓存设置**：配置会缓存 1 小时，如需立即更新请刷新 TVBox 配置
 4. **兼容性**：支持 TVBox 及其衍生应用
@@ -174,7 +174,7 @@ https://your-domain.com/api/parse?url={视频地址}
 
 ### 源站不显示
 
-- 检查 KatelyaTV 中是否正确配置了视频源
+- 检查 SHTTV 中是否正确配置了视频源
 - 确认视频源格式符合要求
 - 刷新 TVBox 配置
 
@@ -183,7 +183,7 @@ https://your-domain.com/api/parse?url={视频地址}
 如果您在使用过程中遇到问题，请：
 
 1. 检查上述故障排除方案
-2. 查看 KatelyaTV 和 TVBox 的日志信息
+2. 查看 SHTTV 和 TVBox 的日志信息
 3. 向项目仓库提交 Issue
 
 ---

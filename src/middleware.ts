@@ -118,6 +118,9 @@ function handleAuthFailure(
 // 判断是否需要跳过认证的路径
 function shouldSkipAuth(pathname: string): boolean {
   const skipPaths = [
+    '/api/douban',
+    '/douban',
+    '/search',
     '/_next',
     '/favicon.ico',
     '/robots.txt',
@@ -126,8 +129,7 @@ function shouldSkipAuth(pathname: string): boolean {
     '/logo.png',
     '/screenshot.png',
   ];
-
-  return skipPaths.some((path) => pathname.startsWith(path));
+  return skipPaths.some((path) => pathname==='/'||pathname.startsWith(path));
 }
 
 // 配置middleware匹配规则

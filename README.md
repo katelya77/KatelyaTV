@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="public/logo.png" alt="KatelyaTV Logo" width="128" />
+  <img src="public/logo.png" alt="SHTTV Logo" width="128" />
 
-  <h1>KatelyaTV</h1>
+  <h1>SHTTV</h1>
   <p><strong>跨平台 · 聚合搜索 · 即开即用 · 自托管影视聚合播放器</strong></p>
   <p>基于 <code>Next.js 14</code> · <code>TypeScript</code> · <code>Tailwind CSS</code> · 多源聚合 / 播放记录 / 收藏同步 / 跳过片头片尾 / PWA</p>
   
@@ -166,7 +166,7 @@ docker compose -f docker-compose.kvrocks.yml up -d
 
 #### 基础部署
 
-1. **Fork 项目** → [GitHub 仓库](https://github.com/katelya77/KatelyaTV)
+1. **Fork 项目** → [GitHub 仓库](https://github.com/gufengyouqi/KatelyaTV)
 2. **部署到 Vercel**：
    - 登录 [Vercel](https://vercel.com/)
    - 导入刚 Fork 的仓库
@@ -205,7 +205,7 @@ NEXT_PUBLIC_ENABLE_REGISTER=true
 
 #### 快速部署
 
-1. **Fork 项目** → [GitHub 仓库](https://github.com/katelya77/KatelyaTV)
+1. **Fork 项目** → [GitHub 仓库](https://github.com/gufengyouqi/KatelyaTV)
 2. **创建 Pages 项目**：
 
    - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
@@ -630,7 +630,7 @@ GET /api/admin/analytics
 
 配合 [OrionTV](https://github.com/zimplexing/OrionTV) 在 Android TV 上使用：
 
-1. 在 OrionTV 中填入 KatelyaTV 部署地址
+1. 在 OrionTV 中填入 SHTTV 部署地址
 2. 输入设置的 PASSWORD
 3. 即可在电视上观看
 
@@ -703,7 +703,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="backups/$DATE"
 mkdir -p $BACKUP_DIR
 
-echo "开始备份 KatelyaTV 数据..."
+echo "开始备份 SHTTV 数据..."
 
 # 备份配置文件
 cp config.json $BACKUP_DIR/config.json
@@ -952,17 +952,17 @@ server {
 
 **官方资源**：
 
-- [📦 GitHub 仓库](https://github.com/katelya77/KatelyaTV)
+- [📦 GitHub 仓库](https://github.com/gufengyouqi/KatelyaTV)
 - [🐳 Docker Hub](https://hub.docker.com/r/katelya77/katelyatv)
-- [📊 GitHub Container Registry](https://github.com/katelya77/KatelyaTV/pkgs/container/katelyatv)
-- [📋 版本发布页](https://github.com/katelya77/KatelyaTV/releases)
+- [📊 GitHub Container Registry](https://github.com/gufengyouqi/KatelyaTV/pkgs/container/katelyatv)
+- [📋 版本发布页](https://github.com/gufengyouqi/KatelyaTV/releases)
 
 **社区支持**：
 
-- [💬 Discussions 讨论区](https://github.com/katelya77/KatelyaTV/discussions)
-- [🐛 Issues 问题反馈](https://github.com/katelya77/KatelyaTV/issues)
-- [📖 Wiki 知识库](https://github.com/katelya77/KatelyaTV/wiki)
-- [💡 Feature Requests](https://github.com/katelya77/KatelyaTV/issues?q=label%3Aenhancement)
+- [💬 Discussions 讨论区](https://github.com/gufengyouqi/KatelyaTV/discussions)
+- [🐛 Issues 问题反馈](https://github.com/gufengyouqi/KatelyaTV/issues)
+- [📖 Wiki 知识库](https://github.com/gufengyouqi/KatelyaTV/wiki)
+- [💡 Feature Requests](https://github.com/gufengyouqi/KatelyaTV/issues?q=label%3Aenhancement)
 
 **在线演示**：
 
@@ -984,7 +984,7 @@ server {
 
 ```bash
 # 本地开发环境搭建
-git clone https://github.com/katelya77/KatelyaTV.git
+git clone https://github.com/gufengyouqi/KatelyaTV.git
 cd KatelyaTV
 
 # 安装依赖
@@ -1060,15 +1060,15 @@ pnpm format
 
 ### 💝 支持项目发展
 
-如果 KatelyaTV 对您有帮助，欢迎通过以下方式支持项目：
+如果 SHTTV 对您有帮助，欢迎通过以下方式支持项目：
 
 **免费支持**：
 
-- ⭐ [GitHub 点 Star](https://github.com/katelya77/KatelyaTV/stargazers)
-- 🍴 [Fork 项目](https://github.com/katelya77/KatelyaTV/fork)
-- 💬 [参与讨论](https://github.com/katelya77/KatelyaTV/discussions)
-- 📖 [完善文档](https://github.com/katelya77/KatelyaTV/tree/main/docs)
-- 🔗 [推荐朋友](https://github.com/katelya77/KatelyaTV)
+- ⭐ [GitHub 点 Star](https://github.com/gufengyouqi/KatelyaTV/stargazers)
+- 🍴 [Fork 项目](https://github.com/gufengyouqi/KatelyaTV/fork)
+- 💬 [参与讨论](https://github.com/gufengyouqi/KatelyaTV/discussions)
+- 📖 [完善文档](https://github.com/gufengyouqi/KatelyaTV/tree/main/docs)
+- 🔗 [推荐朋友](https://github.com/gufengyouqi/KatelyaTV)
 
 **赞助支持**：
 
@@ -1080,18 +1080,18 @@ pnpm format
 </div>
 
 **企业赞助**：
-如果您的企业希望赞助 KatelyaTV 项目，请通过 [GitHub Sponsors](https://github.com/sponsors/katelya77) 或发邮件联系我们。
+如果您的企业希望赞助 SHTTV 项目，请通过 [GitHub Sponsors](https://github.com/sponsors/katelya77) 或发邮件联系我们。
 
 ### � 项目统计
 
-[![GitHub stars](https://img.shields.io/github/stars/katelya77/KatelyaTV?style=social)](https://github.com/katelya77/KatelyaTV/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/katelya77/KatelyaTV?style=social)](https://github.com/katelya77/KatelyaTV/network/members)
-[![GitHub watchers](https://img.shields.io/github/watchers/katelya77/KatelyaTV?style=social)](https://github.com/katelya77/KatelyaTV/watchers)
+[![GitHub stars](https://img.shields.io/github/stars/katelya77/KatelyaTV?style=social)](https://github.com/gufengyouqi/KatelyaTV/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/katelya77/KatelyaTV?style=social)](https://github.com/gufengyouqi/KatelyaTV/network/members)
+[![GitHub watchers](https://img.shields.io/github/watchers/katelya77/KatelyaTV?style=social)](https://github.com/gufengyouqi/KatelyaTV/watchers)
 
-[![GitHub release](https://img.shields.io/github/v/release/katelya77/KatelyaTV)](https://github.com/katelya77/KatelyaTV/releases)
+[![GitHub release](https://img.shields.io/github/v/release/katelya77/KatelyaTV)](https://github.com/gufengyouqi/KatelyaTV/releases)
 [![Docker Pulls](https://img.shields.io/docker/pulls/katelya77/katelyatv)](https://hub.docker.com/r/katelya77/katelyatv)
-[![GitHub issues](https://img.shields.io/github/issues/katelya77/KatelyaTV)](https://github.com/katelya77/KatelyaTV/issues)
-[![GitHub license](https://img.shields.io/github/license/katelya77/KatelyaTV)](https://github.com/katelya77/KatelyaTV/blob/main/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/katelya77/KatelyaTV)](https://github.com/gufengyouqi/KatelyaTV/issues)
+[![GitHub license](https://img.shields.io/github/license/katelya77/KatelyaTV)](https://github.com/gufengyouqi/KatelyaTV/blob/main/LICENSE)
 
 **Star History**：
 [![Star History Chart](https://api.star-history.com/svg?repos=katelya77/KatelyaTV&type=Date)](https://star-history.com/#katelya77/KatelyaTV&Date)
@@ -1105,7 +1105,7 @@ pnpm format
 ```
 MIT License
 
-Copyright (c) 2025 KatelyaTV & Contributors
+Copyright (c) 2025 SHTTV & Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1134,16 +1134,16 @@ SOFTWARE.
     <strong>如果项目对您有帮助，请给个 ⭐ Star 支持一下！</strong>
   </p>
   <p>
-    <a href="https://github.com/katelya77/KatelyaTV">🏠 项目首页</a>
+    <a href="https://github.com/gufengyouqi/KatelyaTV">🏠 项目首页</a>
     •
-    <a href="https://github.com/katelya77/KatelyaTV/issues">🐛 问题反馈</a>
+    <a href="https://github.com/gufengyouqi/KatelyaTV/issues">🐛 问题反馈</a>
     •
-    <a href="https://github.com/katelya77/KatelyaTV/discussions">💬 讨论交流</a>
+    <a href="https://github.com/gufengyouqi/KatelyaTV/discussions">💬 讨论交流</a>
     •
-    <a href="https://github.com/katelya77/KatelyaTV/wiki">📚 使用文档</a>
+    <a href="https://github.com/gufengyouqi/KatelyaTV/wiki">📚 使用文档</a>
   </p>
   <br>
   <p>
-    <em>❤️ Made with love by KatelyaTV Community ❤️</em>
+    <em>❤️ Made with love by SHTTV Community ❤️</em>
   </p>
 </div>

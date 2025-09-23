@@ -164,6 +164,10 @@ export class DbManager {
 
   // 检查用户是否已存在
   async checkUserExist(userName: string): Promise<boolean> {
+    // 如果userName 是系统管理员，则返回true
+    if (userName === process.env.USERNAM) {
+      return true;
+    }
     return this.storage.checkUserExist(userName);
   }
 

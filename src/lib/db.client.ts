@@ -74,7 +74,7 @@ interface UserCacheStore {
 }
 
 // ---- 常量 ----
-// 新的键名（KatelyaTV）与旧键名（MoonTV）保持向后兼容
+// 新的键名（SHTTV）与旧键名（MoonTV）保持向后兼容
 const PLAY_RECORDS_KEY = 'katelyatv_play_records';
 const FAVORITES_KEY = 'katelyatv_favorites';
 const SEARCH_HISTORY_KEY = 'katelyatv_search_history';

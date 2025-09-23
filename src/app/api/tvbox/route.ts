@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
           url: "Sequence"
         },
         {
-          name: "KatelyaTV内置解析",
+          name: "SHTTV内置解析",
           type: 1,
           url: `${baseUrl}/api/parse?url=`,
           ext: {
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
       // 直播源（可选）
       lives: [
         {
-          name: "KatelyaTV直播",
+          name: "SHTTV直播",
           type: 0,
           url: `${baseUrl}/api/live/channels`,
           epg: "",

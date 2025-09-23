@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * KatelyaTV 全方案部署状态检查脚本
+ * SHTTV 全方案部署状态检查脚本
  * 检查所有部署方案的配置文件和环境是否完整
  */
 
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔍 KatelyaTV 部署配置检查开始...\n');
+console.log('🔍 SHTTV 部署配置检查开始...\n');
 
 // 检查结果统计
 let checkResults = {

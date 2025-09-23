@@ -126,7 +126,11 @@ export const UserMenu: React.FC = () => {
   }, []);
 
   const handleMenuClick = () => {
-    setIsOpen(!isOpen);
+    if (!authInfo){
+      router.push('/login');
+    }else{
+      setIsOpen(!isOpen);
+    }
   };
 
   const handleCloseMenu = () => {
@@ -350,10 +354,10 @@ export const UserMenu: React.FC = () => {
               <div className='font-semibold text-gray-900 dark:text-gray-100 text-sm truncate'>
                 {authInfo?.username || 'default'}
               </div>
-              <div className='text-[10px] text-gray-400 dark:text-gray-500'>
-                数据存储：
-                {storageType === 'localstorage' ? '本地' : storageType}
-              </div>
+              {/*<div className='text-[10px] text-gray-400 dark:text-gray-500'>*/}
+              {/*  数据存储：*/}
+              {/*  {storageType === 'localstorage' ? '本地' : storageType}*/}
+              {/*</div>*/}
             </div>
           </div>
         </div>
@@ -418,7 +422,7 @@ export const UserMenu: React.FC = () => {
           {/* 版本信息 */}
           <button
             onClick={() =>
-              window.open('https://github.com/katelya77/KatelyaTV', '_blank')
+              window.open('https://github.com/gufengyouqi/KatelyaTV', '_blank')
             }
             className='w-full px-3 py-2 text-center flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors text-xs'
           >

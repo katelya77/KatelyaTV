@@ -80,7 +80,7 @@ docker-compose -f docker-compose.kvrocks.auth.yml up -d
 
 ## ⚡ 性能表现
 
-在 KatelyaTV 的实际使用场景中：
+在 SHTTV 的实际使用场景中：
 
 - **读取性能**：接近 Redis，毫秒级响应
 - **写入性能**：略低于 Redis，但仍然很快
@@ -167,4 +167,4 @@ docker compose exec kvrocks redis-cli info persistence
 
 ---
 
-**总结**：Kvrocks 是 Redis 的完美替代方案，特别适合 KatelyaTV 这种需要高可靠性数据存储的应用场景。它在保持 Redis 兼容性的同时，提供了更好的数据安全性和更低的运营成本。
+**总结**：Kvrocks 是 Redis 的完美替代方案，特别适合 SHTTV 这种需要高可靠性数据存储的应用场景。它在保持 Redis 兼容性的同时，提供了更好的数据安全性和更低的运营成本。

@@ -71,7 +71,7 @@ NEXT_PUBLIC_ENABLE_REGISTER = "true"
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. 进入 **Pages** 服务
 3. 点击 **Create a project**
-4. 连接 GitHub 仓库并选择 KatelyaTV 项目
+4. 连接 GitHub 仓库并选择 SHTTV 项目
 5. 配置构建设置：
    - **Build command**: `pnpm install --frozen-lockfile && pnpm run pages:build`
    - **Build output directory**: `.vercel/output/static`
