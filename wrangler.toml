@@ -1,0 +1,49 @@
+name = "katelyatv"
+compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# 生产环境配置
+[env.production]
+name = "katelyatv"
+
+# 生产环境 D1 数据库配置
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "katelyatv-db"
+database_id = "6d580637-1f87-4ddf-8b4d-3d97254b4c33"
+
+# 生产环境变量
+[env.production.vars]
+NEXT_PUBLIC_STORAGE_TYPE = "d1"
+NEXT_PUBLIC_SITE_NAME = "KatelyaTV"
+NEXT_PUBLIC_SITE_DESCRIPTION = "高性能影视播放平台"
+NEXTAUTH_URL = "https://your-domain.pages.dev"
+IMAGE_PROXY_ENABLED = "true"
+CACHE_TTL = "3600"
+CORS_ORIGIN = "*"
+RATE_LIMIT_MAX = "100"
+RATE_LIMIT_WINDOW = "60000"
+HEALTH_CHECK_ENABLED = "true"
+HEALTH_CHECK_INTERVAL = "30"
+LOG_LEVEL = "info"
+LOG_FORMAT = "json"
+NODE_ENV = "production"
+
+# 预览环境配置
+[env.preview]
+name = "katelyatv-preview"
+
+# 预览环境 D1 数据库配置
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "katelyatv-db"
+database_id = "6d580637-1f87-4ddf-8b4d-3d97254b4c33"
+
+# 预览环境变量
+[env.preview.vars]
+NEXT_PUBLIC_STORAGE_TYPE = "d1"
+NEXT_PUBLIC_SITE_NAME = "KatelyaTV"
+NEXT_PUBLIC_SITE_DESCRIPTION = "高性能影视播放平台"
+IMAGE_PROXY_ENABLED = "true"
+NODE_ENV = "production"

@@ -82,6 +82,21 @@ function HomeClient() {
   const [loading, setLoading] = useState(true);
   const { announcement } = useSite();
 
+  // 分页状态管理
+  const [moviePage, setMoviePage] = useState(0);
+  const [tvShowPage, setTvShowPage] = useState(0);
+  const [varietyShowPage, setVarietyShowPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState({
+    movies: false,
+    tvShows: false,
+    varietyShows: false,
+  });
+  const [hasMoreData, setHasMoreData] = useState({
+    movies: true,
+    tvShows: true,
+    varietyShows: true,
+  });
+
   const [showAnnouncement, setShowAnnouncement] = useState(false);
 
   // 检查公告弹窗状态
@@ -147,6 +162,100 @@ function HomeClient() {
 
     fetchDoubanData();
   }, []);
+
+  // 加载更多电影
+  const loadMoreMovies = async () => {
+    if (loadingMore.movies || !hasMoreData.movies) return;
+
+    setLoadingMore(prev => ({ ...prev, movies: true }));
+    try {
+      const nextPage = moviePage + 1;
+      const moviesData = await getDoubanCategories({
+        kind: 'movie',
+        category: '热门',
+        type: '全部',
+        pageStart: nextPage * 20,
+        pageLimit: 20,
+      });
+
+      if (moviesData.code === 200 && moviesData.list.length > 0) {
+        setHotMovies(prev => [...prev, ...moviesData.list]);
+        setMoviePage(nextPage);
+        // 如果返回的数据少于请求的数量，说明没有更多数据了
+        if (moviesData.list.length < 20) {
+          setHasMoreData(prev => ({ ...prev, movies: false }));
+        }
+      } else {
+        setHasMoreData(prev => ({ ...prev, movies: false }));
+      }
+    } catch (error) {
+      // 静默处理错误
+    } finally {
+      setLoadingMore(prev => ({ ...prev, movies: false }));
+    }
+  };
+
+  // 加载更多剧集
+  const loadMoreTvShows = async () => {
+    if (loadingMore.tvShows || !hasMoreData.tvShows) return;
+
+    setLoadingMore(prev => ({ ...prev, tvShows: true }));
+    try {
+      const nextPage = tvShowPage + 1;
+      const tvShowsData = await getDoubanCategories({
+        kind: 'tv',
+        category: 'tv',
+        type: 'tv',
+        pageStart: nextPage * 20,
+        pageLimit: 20,
+      });
+
+      if (tvShowsData.code === 200 && tvShowsData.list.length > 0) {
+        setHotTvShows(prev => [...prev, ...tvShowsData.list]);
+        setTvShowPage(nextPage);
+        if (tvShowsData.list.length < 20) {
+          setHasMoreData(prev => ({ ...prev, tvShows: false }));
+        }
+      } else {
+        setHasMoreData(prev => ({ ...prev, tvShows: false }));
+      }
+    } catch (error) {
+      // 静默处理错误
+    } finally {
+      setLoadingMore(prev => ({ ...prev, tvShows: false }));
+    }
+  };
+
+  // 加载更多综艺
+  const loadMoreVarietyShows = async () => {
+    if (loadingMore.varietyShows || !hasMoreData.varietyShows) return;
+
+    setLoadingMore(prev => ({ ...prev, varietyShows: true }));
+    try {
+      const nextPage = varietyShowPage + 1;
+      const varietyShowsData = await getDoubanCategories({
+        kind: 'tv',
+        category: 'show',
+        type: 'show',
+        pageStart: nextPage * 20,
+        pageLimit: 20,
+      });
+
+      if (varietyShowsData.code === 200 && varietyShowsData.list.length > 0) {
+        setHotVarietyShows(prev => [...prev, ...varietyShowsData.list]);
+        setVarietyShowPage(nextPage);
+        if (varietyShowsData.list.length < 20) {
+          setHasMoreData(prev => ({ ...prev, varietyShows: false }));
+        }
+      } else {
+        setHasMoreData(prev => ({ ...prev, varietyShows: false }));
+      }
+    } catch (error) {
+      // 静默处理错误
+    } finally {
+      setLoadingMore(prev => ({ ...prev, varietyShows: false }));
+    }
+  };
 
   // 处理收藏数据更新的函数
   const updateFavoriteItems = async (allFavorites: Record<string, Favorite>) => {
@@ -292,7 +401,12 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <PaginatedRow itemsPerPage={10}>
+                <PaginatedRow 
+                  itemsPerPage={10}
+                  onLoadMore={loadMoreMovies}
+                  hasMoreData={hasMoreData.movies}
+                  isLoading={loadingMore.movies}
+                >
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
                       Array.from({ length: 10 }).map((_, index) => (
@@ -340,7 +454,12 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <PaginatedRow itemsPerPage={10}>
+                <PaginatedRow 
+                  itemsPerPage={10}
+                  onLoadMore={loadMoreTvShows}
+                  hasMoreData={hasMoreData.tvShows}
+                  isLoading={loadingMore.tvShows}
+                >
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
                       Array.from({ length: 10 }).map((_, index) => (
@@ -387,7 +506,12 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <PaginatedRow itemsPerPage={10}>
+                <PaginatedRow 
+                  itemsPerPage={10}
+                  onLoadMore={loadMoreVarietyShows}
+                  hasMoreData={hasMoreData.varietyShows}
+                  isLoading={loadingMore.varietyShows}
+                >
                   {loading
                     ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
                       Array.from({ length: 10 }).map((_, index) => (

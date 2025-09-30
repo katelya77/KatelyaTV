@@ -3,7 +3,7 @@
 import { createClient, RedisClientType } from 'redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -266,9 +266,31 @@ export class KvrocksStorage implements IStorage {
     });
   }
 
-  async getAllUsers(): Promise<string[]> {
-    const users = await withRetry(() => this.client.sMembers(this.userListKey()));
-    return ensureStringArray(users);
+  async getAllUsers(): Promise<User[]> {
+    const usernames = await withRetry(() => this.client.sMembers(this.userListKey()));
+    const ownerUsername = process.env.USERNAME || 'admin';
+    
+    const users = await Promise.all(
+      usernames.map(async (username) => {
+        let created_at = '';
+        try {
+          const userData = await this.getUser(username);
+          if (userData?.created_at) {
+            created_at = new Date(userData.created_at).toISOString();
+          }
+        } catch (err) {
+          // 忽略错误，使用空字符串
+        }
+
+        return {
+          username,
+          role: username === ownerUsername ? 'owner' : 'user',
+          created_at
+        };
+      })
+    );
+
+    return users;
   }
 
   async registerUser(userName: string, password: string): Promise<void> {
@@ -337,6 +359,48 @@ export class KvrocksStorage implements IStorage {
       this.client.set(this.adminConfigKey(), JSON.stringify(config))
     );
   }
+
+  // ---------- 用户设置 ----------
+  private userSettingsKey(userName: string) {
+    return `u:${userName}:settings`;
+  }
+
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    const val = await withRetry(() =>
+      this.client.get(this.userSettingsKey(userName))
+    );
+    return val ? (JSON.parse(val) as UserSettings) : null;
+  }
+
+  async setUserSettings(
+    userName: string,
+    settings: UserSettings
+  ): Promise<void> {
+    await withRetry(() =>
+      this.client.set(this.userSettingsKey(userName), JSON.stringify(settings))
+    );
+  }
+
+  async updateUserSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<void> {
+    const current = await this.getUserSettings(userName);
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true,
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: false,
+      video_quality: 'auto'
+    };
+    const updated: UserSettings = { 
+      ...defaultSettings, 
+      ...current, 
+      ...settings,
+      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
+    };
+    await this.setUserSettings(userName, updated);
+  }
 }
 
 // Kvrocks客户端单例
@@ -351,10 +415,11 @@ export function getKvrocksClient(): RedisClientType {
 
     console.log('🏪 Initializing Kvrocks client...');
     console.log('🔗 Kvrocks URL:', kvrocksUrl.replace(/\/\/.*@/, '//***:***@'));
+    console.log('🔑 Password configured:', kvrocksPassword ? 'Yes' : 'No');
 
-    kvrocksClient = createClient({
+    // 构建客户端配置
+    const clientConfig: any = {
       url: kvrocksUrl,
-      password: kvrocksPassword,
       database: kvrocksDatabase,
       socket: {
         connectTimeout: 10000, // 10秒连接超时
@@ -364,7 +429,17 @@ export function getKvrocksClient(): RedisClientType {
           return delay;
         },
       },
-    });
+    };
+
+    // 只有当密码存在且不为空时才添加密码配置
+    if (kvrocksPassword && kvrocksPassword.trim() !== '') {
+      clientConfig.password = kvrocksPassword;
+      console.log('🔐 Using password authentication');
+    } else {
+      console.log('🔓 No password authentication (connecting without password)');
+    }
+
+    kvrocksClient = createClient(clientConfig);
 
     kvrocksClient.on('error', (err) => {
       console.error('❌ Kvrocks Client Error:', err);

@@ -70,6 +70,7 @@ interface DataSource {
   detail?: string;
   disabled?: boolean;
   from: 'config' | 'custom';
+  is_adult?: boolean; // 添加成人内容标记字段
 }
 
 // 可折叠标签组件
@@ -643,6 +644,7 @@ const VideoSourceConfig = ({
     detail: '',
     disabled: false,
     from: 'config',
+    is_adult: false, // 默认不是成人内容
   });
 
   // dnd-kit 传感器
@@ -721,6 +723,7 @@ const VideoSourceConfig = ({
       name: newSource.name,
       api: newSource.api,
       detail: newSource.detail,
+      is_adult: newSource.is_adult, // 传递成人内容标记
     })
       .then(() => {
         setNewSource({
@@ -730,6 +733,7 @@ const VideoSourceConfig = ({
           detail: '',
           disabled: false,
           from: 'custom',
+          is_adult: false, // 重置为默认值
         });
         setShowAddForm(false);
       })
@@ -866,7 +870,8 @@ const VideoSourceConfig = ({
           exportConfig.api_site[source.key] = {
             api: source.api,
             name: source.name,
-            ...(source.detail && { detail: source.detail })
+            ...(source.detail && { detail: source.detail }),
+            ...(source.is_adult !== undefined && { is_adult: source.is_adult }) // 确保导出 is_adult 字段
           };
         }
       });
@@ -939,7 +944,7 @@ const VideoSourceConfig = ({
               throw new Error(`${key}: 无效的配置对象`);
             }
             
-            const sourceObj = source as { api?: string; name?: string; detail?: string };
+            const sourceObj = source as { api?: string; name?: string; detail?: string; is_adult?: boolean };
             
             if (!sourceObj.api || !sourceObj.name) {
               throw new Error(`${key}: 缺少必要字段 api 或 name`);
@@ -950,7 +955,8 @@ const VideoSourceConfig = ({
               key: key,
               name: sourceObj.name,
               api: sourceObj.api,
-              detail: sourceObj.detail || ''
+              detail: sourceObj.detail || '',
+              is_adult: sourceObj.is_adult || false // 确保处理 is_adult 字段
             });
             successCount++;
           } catch (error) {
@@ -1246,6 +1252,25 @@ const VideoSourceConfig = ({
               }
               className='px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
             />
+            
+            {/* 成人内容标记复选框 */}
+            <div className='flex items-center space-x-2'>
+              <input
+                type='checkbox'
+                id='is_adult'
+                checked={newSource.is_adult || false}
+                onChange={(e) =>
+                  setNewSource((prev) => ({ ...prev, is_adult: e.target.checked }))
+                }
+                className='w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:bg-gray-700 dark:border-gray-600'
+              />
+              <label
+                htmlFor='is_adult'
+                className='text-sm font-medium text-gray-900 dark:text-gray-300'
+              >
+                🔞 成人内容资源站
+              </label>
+            </div>
           </div>
           <div className='flex justify-end'>
             <button

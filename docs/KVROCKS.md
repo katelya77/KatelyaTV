@@ -48,6 +48,33 @@ Kvrocks 是一个分布式键值数据库，兼容 Redis 协议，基于 RocksDB
 ### 3. 运维简单
 
 - **免维护**：无需定期备份，数据自动持久化
+
+## 🔧 快速部署
+
+### 无密码部署（开发环境）
+
+```bash
+# 1. 设置环境变量
+cp .env.kvrocks.example .env
+# 编辑 .env，不设置 KVROCKS_PASSWORD
+
+# 2. 启动服务
+docker-compose -f docker-compose.kvrocks.yml up -d
+```
+
+### 密码认证部署（生产环境）
+
+```bash
+# 1. 设置环境变量
+cp .env.kvrocks.example .env
+# 编辑 .env，设置 KVROCKS_PASSWORD=your_secure_password
+
+# 2. 启动服务
+docker-compose -f docker-compose.kvrocks.auth.yml up -d
+```
+
+📖 **详细部署指南**：请参考 [KVROCKS_DEPLOYMENT.md](./KVROCKS_DEPLOYMENT.md)
+
 - **监控简单**：提供标准 Redis 监控接口
 - **迁移容易**：完全兼容 Redis 客户端和工具
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 /**
  * LocalStorage 存储实现
@@ -290,19 +290,89 @@ export class LocalStorage implements IStorage {
     }
   }
 
+  // ---------- 用户设置 ----------
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const storageKey = this.getStorageKey('settings', userName);
+      const data = localStorage.getItem(storageKey);
+      if (data) {
+        return JSON.parse(data);
+      }
+      
+      // 如果用户设置不存在，返回默认设置
+      const defaultSettings: UserSettings = {
+        filter_adult_content: true, // 默认开启成人内容过滤
+        theme: 'auto',
+        language: 'zh-CN',
+        auto_play: true,
+        video_quality: 'auto'
+      };
+      
+      return defaultSettings;
+    } catch (error) {
+      console.error('Error getting user settings:', error);
+      return null;
+    }
+  }
+
+  async setUserSettings(userName: string, settings: UserSettings): Promise<void> {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const storageKey = this.getStorageKey('settings', userName);
+      localStorage.setItem(storageKey, JSON.stringify(settings));
+    } catch (error) {
+      console.error('Error setting user settings:', error);
+    }
+  }
+
+  async updateUserSettings(userName: string, settings: Partial<UserSettings>): Promise<void> {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const currentSettings = await this.getUserSettings(userName);
+      const updatedSettings = { ...currentSettings, ...settings };
+      await this.setUserSettings(userName, updatedSettings as UserSettings);
+    } catch (error) {
+      console.error('Error updating user settings:', error);
+    }
+  }
+
   // ---------- 管理员功能 ----------
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     if (typeof window === 'undefined') return [];
     
     try {
-      const users: string[] = [];
+      const users: User[] = [];
       const prefix = 'katelyatv_user_';
+      const ownerUsername = process.env.USERNAME || 'admin';
       
       for (let i = 0; i < localStorage.length; i++) {
         const storageKey = localStorage.key(i);
         if (storageKey && storageKey.startsWith(prefix)) {
-          const userName = storageKey.replace(prefix, '');
-          users.push(userName);
+          const username = storageKey.replace(prefix, '');
+          
+          // 尝试获取用户创建时间
+          let created_at = '';
+          try {
+            const userDataStr = localStorage.getItem(storageKey);
+            if (userDataStr) {
+              const userData = JSON.parse(userDataStr);
+              if (userData.created_at) {
+                created_at = new Date(userData.created_at).toISOString();
+              }
+            }
+          } catch (err) {
+            // 忽略解析错误
+          }
+          
+          users.push({
+            username,
+            role: username === ownerUsername ? 'owner' : 'user',
+            created_at
+          });
         }
       }
       
@@ -365,7 +435,7 @@ export class LocalStorage implements IStorage {
       localStorage.removeItem(userKey);
       
       // 删除用户相关的所有数据
-      const prefixes = ['playrecord', 'favorite', 'searchhistory', 'skipconfig'];
+      const prefixes = ['playrecord', 'favorite', 'searchhistory', 'skipconfig', 'settings'];
       
       for (const prefix of prefixes) {
         const dataPrefix = this.getStorageKey(prefix, userName);

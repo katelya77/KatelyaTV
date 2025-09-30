@@ -505,8 +505,22 @@ function PlayPageClient() {
         }
         const data = await response.json();
 
+        // 处理新的搜索结果格式：合并 regular_results 和 adult_results
+        let allResults: SearchResult[] = [];
+        if (data.regular_results && Array.isArray(data.regular_results)) {
+          allResults = allResults.concat(data.regular_results);
+        }
+        if (data.adult_results && Array.isArray(data.adult_results)) {
+          allResults = allResults.concat(data.adult_results);
+        }
+        
+        // 兼容旧格式（如果有的话）
+        if (data.results && Array.isArray(data.results)) {
+          allResults = data.results;
+        }
+
         // 处理搜索结果，根据规则过滤
-        const results = data.results.filter(
+        const results = allResults.filter(
           (result: SearchResult) =>
             result.title.replaceAll(' ', '').toLowerCase() ===
               videoTitleRef.current.replaceAll(' ', '').toLowerCase() &&
@@ -1618,7 +1632,7 @@ function PlayPageClient() {
 
             {/* 选集和换源 - 在移动端始终显示，在 lg 及以上可折叠 */}
             <div
-              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`h-[600px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
                 isEpisodeSelectorCollapsed
                   ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
                   : 'md:col-span-1 lg:opacity-100 lg:scale-100'
@@ -1626,6 +1640,7 @@ function PlayPageClient() {
             >
               <EpisodeSelector
                 totalEpisodes={totalEpisodes}
+                episodesPerPage={50}
                 value={currentEpisodeIndex + 1}
                 onChange={handleEpisodeChange}
                 onSourceChange={handleSourceChange}

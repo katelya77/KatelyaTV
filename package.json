@@ -1,6 +1,6 @@
 {
   "name": "katelyatv",
-  "version": "0.6.0-katelya",
+  "version": "0.7.0-katelya",
   "private": true,
   "scripts": {
     "dev": "npm run gen:runtime && npm run gen:manifest && next dev -H 0.0.0.0",

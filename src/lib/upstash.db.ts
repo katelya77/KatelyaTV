@@ -3,7 +3,7 @@
 import { Redis } from '@upstash/redis';
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -244,14 +244,41 @@ export class UpstashRedisStorage implements IStorage {
   }
 
   // ---------- 获取全部用户 ----------
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     const keys = await withRetry(() => this.client.keys('u:*:pwd'));
-    return keys
+    const ownerUsername = process.env.USERNAME || 'admin';
+    
+    const usernames = keys
       .map((k) => {
         const match = k.match(/^u:(.+?):pwd$/);
         return match ? ensureString(match[1]) : undefined;
       })
       .filter((u): u is string => typeof u === 'string');
+
+    // 获取用户创建时间并构造 User 对象
+    const users = await Promise.all(
+      usernames.map(async (username) => {
+        // 尝试获取用户创建时间，如果没有则使用空字符串
+        const createdAtKey = `u:${username}:created_at`;
+        let created_at = '';
+        try {
+          const timestamp = await withRetry(() => this.client.get(createdAtKey));
+          if (timestamp && typeof timestamp === 'number') {
+            created_at = new Date(timestamp).toISOString();
+          }
+        } catch (err) {
+          // 忽略错误，使用空字符串
+        }
+
+        return {
+          username,
+          role: username === ownerUsername ? 'owner' : 'user',
+          created_at
+        };
+      })
+    );
+
+    return users;
   }
 
   // ---------- 管理员配置 ----------
@@ -328,6 +355,48 @@ export class UpstashRedisStorage implements IStorage {
       // 从用户的跳过配置集合中移除
       await this.client.srem(this.skipConfigsKey(userName), key);
     });
+  }
+
+  // ---------- 用户设置 ----------
+  private userSettingsKey(userName: string) {
+    return `u:${userName}:settings`;
+  }
+
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    const val = await withRetry(() =>
+      this.client.get(this.userSettingsKey(userName))
+    );
+    return val ? (val as UserSettings) : null;
+  }
+
+  async setUserSettings(
+    userName: string,
+    settings: UserSettings
+  ): Promise<void> {
+    await withRetry(() =>
+      this.client.set(this.userSettingsKey(userName), settings)
+    );
+  }
+
+  async updateUserSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<void> {
+    const current = await this.getUserSettings(userName);
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true,
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: false,
+      video_quality: 'auto'
+    };
+    const updated: UserSettings = { 
+      ...defaultSettings, 
+      ...current, 
+      ...settings,
+      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
+    };
+    await this.setUserSettings(userName, updated);
   }
 }
 

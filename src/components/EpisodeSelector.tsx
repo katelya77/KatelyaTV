@@ -234,7 +234,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   return (
     <div className='md:ml-2 px-4 py-0 h-full rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
       {/* 主要的 Tab 切换 - 无缝融入设计 */}
-      <div className='flex mb-1 -mx-6 flex-shrink-0'>
+      <div className='flex mb-0 -mx-6 flex-shrink-0'>
         {totalEpisodes > 1 && (
           <div
             onClick={() => setActiveTab('episodes')}
@@ -267,7 +267,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       {activeTab === 'episodes' && (
         <>
           {/* 分类标签 */}
-          <div className='flex items-center gap-4 mb-4 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
+          <div className='flex items-center gap-4 mb-2 border-b border-gray-300 dark:border-gray-700 -mx-6 px-6 flex-shrink-0'>
             <div className='flex-1 overflow-x-auto' ref={categoryContainerRef}>
               <div className='flex gap-2 min-w-max'>
                 {categories.map((label, idx) => {
@@ -320,8 +320,8 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </button>
           </div>
 
-          {/* 集数网格 */}
-          <div className='grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] justify-center gap-2 overflow-y-auto pb-4'>
+          {/* 集数网格 - 优化为10行×5列布局 */}
+          <div className='grid grid-cols-5 gap-3 pb-6 px-2'>
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
@@ -338,7 +338,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     e.stopPropagation();
                     handleEpisodeClick(episodeNumber);
                   }}
-                  className={`w-full h-10 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 cursor-pointer
+                  className={`w-full h-10 flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer
                     ${
                       isActive
                         ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'

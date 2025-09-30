@@ -1,7 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
 import { AdminConfig } from './admin.types';
-import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord } from './types';
+import { EpisodeSkipConfig, Favorite, IStorage, PlayRecord, User, UserSettings } from './types';
 
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
@@ -39,7 +39,21 @@ interface D1ExecResult {
 
 // 获取全局D1数据库实例
 function getD1Database(): D1Database {
-  return (process.env as any).DB as D1Database;
+  // 在 Cloudflare Pages 环境中，DB 通过全局绑定可用
+  if (typeof globalThis !== 'undefined') {
+    // 尝试直接访问全局 DB
+    const globalDB = (globalThis as any).DB;
+    if (globalDB) {
+      return globalDB as D1Database;
+    }
+  }
+  
+  // 回退到 process.env（用于本地开发）
+  if (process.env.DB) {
+    return (process.env as any).DB as D1Database;
+  }
+  
+  throw new Error('D1 database not available');
 }
 
 export class D1Storage implements IStorage {
@@ -428,14 +442,20 @@ export class D1Storage implements IStorage {
   }
 
   // 用户列表
-  async getAllUsers(): Promise<string[]> {
+  async getAllUsers(): Promise<User[]> {
     try {
       const db = await this.getDatabase();
       const result = await db
-        .prepare('SELECT username FROM users ORDER BY created_at ASC')
-        .all<{ username: string }>();
+        .prepare('SELECT username, created_at FROM users ORDER BY created_at ASC')
+        .all<{ username: string; created_at: string }>();
 
-      return result.results.map((row) => row.username);
+      const ownerUsername = process.env.USERNAME || 'admin';
+      
+      return result.results.map((row) => ({
+        username: row.username,
+        role: row.username === ownerUsername ? 'owner' : 'user',
+        created_at: row.created_at
+      }));
     } catch (err) {
       console.error('Failed to get all users:', err);
       throw err;
@@ -447,7 +467,8 @@ export class D1Storage implements IStorage {
     try {
       const db = await this.getDatabase();
       const result = await db
-        .prepare('SELECT config FROM admin_config WHERE id = 1')
+        .prepare('SELECT config_value as config FROM admin_configs WHERE config_key = ? LIMIT 1')
+        .bind('main_config')
         .first<{ config: string }>();
 
       if (!result) return null;
@@ -464,9 +485,9 @@ export class D1Storage implements IStorage {
       const db = await this.getDatabase();
       await db
         .prepare(
-          'INSERT OR REPLACE INTO admin_config (id, config) VALUES (1, ?)'
+          'INSERT OR REPLACE INTO admin_configs (config_key, config_value, description) VALUES (?, ?, ?)'
         )
-        .bind(JSON.stringify(config))
+        .bind('main_config', JSON.stringify(config), '主要管理员配置')
         .run();
     } catch (err) {
       console.error('Failed to set admin config:', err);
@@ -572,5 +593,64 @@ export class D1Storage implements IStorage {
       console.error('Failed to delete skip config:', err);
       throw err;
     }
+  }
+
+  // ---------- 用户设置 ----------
+  async getUserSettings(userName: string): Promise<UserSettings | null> {
+    try {
+      const db = await this.getDatabase();
+      const row = await db
+        .prepare('SELECT settings FROM user_settings WHERE username = ?')
+        .bind(userName)
+        .first();
+      
+      if (row && row.settings) {
+        return JSON.parse(row.settings as string) as UserSettings;
+      }
+      return null;
+    } catch (err) {
+      console.error('Failed to get user settings:', err);
+      throw err;
+    }
+  }
+
+  async setUserSettings(
+    userName: string,
+    settings: UserSettings
+  ): Promise<void> {
+    try {
+      const db = await this.getDatabase();
+      await db
+        .prepare(`
+          INSERT OR REPLACE INTO user_settings (username, settings, updated_time)
+          VALUES (?, ?, ?)
+        `)
+        .bind(userName, JSON.stringify(settings), Date.now())
+        .run();
+    } catch (err) {
+      console.error('Failed to set user settings:', err);
+      throw err;
+    }
+  }
+
+  async updateUserSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<void> {
+    const current = await this.getUserSettings(userName);
+    const defaultSettings: UserSettings = {
+      filter_adult_content: true,
+      theme: 'auto',
+      language: 'zh-CN',
+      auto_play: false,
+      video_quality: 'auto'
+    };
+    const updated: UserSettings = { 
+      ...defaultSettings, 
+      ...current, 
+      ...settings,
+      filter_adult_content: settings.filter_adult_content ?? current?.filter_adult_content ?? true
+    };
+    await this.setUserSettings(userName, updated);
   }
 }

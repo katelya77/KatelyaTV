@@ -42,6 +42,13 @@ export interface Favorite {
   search_title: string; // 搜索时使用的标题
 }
 
+// 用户数据结构
+export interface User {
+  username: string;
+  role?: string;
+  created_at?: string;
+}
+
 // 存储接口
 export interface IStorage {
   // 播放记录相关
@@ -70,6 +77,11 @@ export interface IStorage {
   // 删除用户（包括密码、搜索历史、播放记录、收藏夹）
   deleteUser(userName: string): Promise<void>;
 
+  // 用户设置相关
+  getUserSettings(userName: string): Promise<UserSettings | null>;
+  setUserSettings(userName: string, settings: UserSettings): Promise<void>;
+  updateUserSettings(userName: string, settings: Partial<UserSettings>): Promise<void>;
+
   // 搜索历史相关
   getSearchHistory(userName: string): Promise<string[]>;
   addSearchHistory(userName: string, keyword: string): Promise<void>;
@@ -82,7 +94,7 @@ export interface IStorage {
   deleteSkipConfig(userName: string, key: string): Promise<void>;
 
   // 用户列表
-  getAllUsers(): Promise<string[]>;
+  getAllUsers(): Promise<User[]>;
 
   // 管理员配置相关
   getAdminConfig(): Promise<AdminConfig | null>;
@@ -117,6 +129,38 @@ export interface DoubanResult {
   code: number;
   message: string;
   list: DoubanItem[];
+}
+
+// 资源站配置
+export interface ApiSite {
+  api: string;
+  name: string;
+  detail?: string;
+  type?: number;
+  playMode?: 'parse' | 'direct';
+  is_adult?: boolean; // 新增：是否为成人内容资源站
+}
+
+// 配置文件结构
+export interface Config {
+  cache_time: number;
+  api_site: { [key: string]: ApiSite };
+}
+
+// 用户设置
+export interface UserSettings {
+  filter_adult_content: boolean; // 是否过滤成人内容，默认为 true
+  theme: 'light' | 'dark' | 'auto';
+  language: string;
+  auto_play: boolean;
+  video_quality: string;
+  [key: string]: string | boolean | number; // 允许其他设置
+}
+
+// 搜索结果（支持成人内容分组）
+export interface GroupedSearchResults {
+  regular_results: SearchResult[];
+  adult_results?: SearchResult[];
 }
 
 // Runtime配置类型
