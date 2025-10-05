@@ -2,28 +2,18 @@
   "cache_time": 7200,
   "api_site": {
     "hnzy": {
-      "api": "https://hnzyapi.com/api.php/provide/vod",
-      "name": "火鸟资源",
+      "api": "https://360zyzz.com/api.php/provide/vod",
+      "name": "官方1",
       "is_adult": false
     },
     "lzzy": {
-      "api": "https://api.liangzizy.com/inc/apijson_vod.php",
-      "name": "量子资源",
+      "api": "https://www.iqiyizy.com/api.php/provide/vod",
+      "name": "官方2",
       "is_adult": false
     },
     "ffzy": {
-      "api": "https://ffzyapi.com/api.php/provide/vod",
-      "name": "非凡资源",
-      "is_adult": false
-    },
-    "ykzy": {
-      "api": "https://api.yongjiuzy.cc/provide/vod",
-      "name": "永久资源",
-      "is_adult": false
-    },
-    "bdzy": {
-      "api": "https://api.1080zyku.com/inc/apijson_vod.php",
-      "name": "百度资源",
+      "api": "https://bfzyapi.com/api.php/provide/vod",
+      "name": "官方3",
       "is_adult": false
     }
   }
