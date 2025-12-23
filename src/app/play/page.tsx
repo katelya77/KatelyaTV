@@ -24,6 +24,9 @@ import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 import EpisodeSelector from '@/components/EpisodeSelector';
 import PageLayout from '@/components/PageLayout';
 import SkipController from '@/components/SkipController';
+import { useTVMode } from '@/components/tv/TVModeProvider';
+import { TVNextEpisodePrompt } from '@/components/tv/TVNextEpisodePrompt';
+import { useTVPlayerControls } from '@/components/tv/useTVPlayerControls';
 
 // 扩展 HTMLVideoElement 类型以支持 hls 属性
 declare global {
@@ -170,6 +173,17 @@ function PlayPageClient() {
 
   // 跳过设置状态
   const [isSkipSettingMode, setIsSkipSettingMode] = useState<boolean>(false);
+
+  // TV 模式状态
+  const { isTVMode } = useTVMode();
+  const isTVModeRef = useRef(isTVMode);
+  const [showNextEpisodePrompt, setShowNextEpisodePrompt] =
+    useState<boolean>(false);
+
+  // 同步 isTVMode 到 ref
+  useEffect(() => {
+    isTVModeRef.current = isTVMode;
+  }, [isTVMode]);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -772,6 +786,28 @@ function PlayPageClient() {
   };
 
   // ---------------------------------------------------------------------------
+  // TV 模式播放器控制
+  // ---------------------------------------------------------------------------
+  // 使用 TV 播放器控制 Hook（Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6）
+  useTVPlayerControls({
+    artPlayerRef,
+    onNextEpisode: handleNextEpisode,
+    onPreviousEpisode: handlePreviousEpisode,
+    isPlayerActive: !loading && !error && !showNextEpisodePrompt,
+  });
+
+  // 处理下一集提示的播放
+  const handlePlayNextFromPrompt = () => {
+    setShowNextEpisodePrompt(false);
+    handleNextEpisode();
+  };
+
+  // 处理下一集提示的取消
+  const handleCancelNextEpisodePrompt = () => {
+    setShowNextEpisodePrompt(false);
+  };
+
+  // ---------------------------------------------------------------------------
   // 键盘快捷键
   // ---------------------------------------------------------------------------
   // 处理全局快捷键
@@ -1275,9 +1311,18 @@ function PlayPageClient() {
         const d = detailRef.current;
         const idx = currentEpisodeIndexRef.current;
         if (d && d.episodes && idx < d.episodes.length - 1) {
-          setTimeout(() => {
-            setCurrentEpisodeIndex(idx + 1);
-          }, 1000);
+          // TV 模式下显示下一集提示（Requirement: 5.7）
+          if (isTVModeRef.current) {
+            setShowNextEpisodePrompt(true);
+          } else {
+            // 普通模式下自动播放下一集
+            setTimeout(() => {
+              setCurrentEpisodeIndex(idx + 1);
+            }, 1000);
+          }
+        } else if (isTVModeRef.current) {
+          // TV 模式下，最后一集也显示提示
+          setShowNextEpisodePrompt(true);
         }
       });
 
@@ -1561,6 +1606,18 @@ function PlayPageClient() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* TV 模式下一集提示 (Requirement: 5.7) */}
+              {isTVMode && (
+                <TVNextEpisodePrompt
+                  isVisible={showNextEpisodePrompt}
+                  currentEpisode={currentEpisodeIndex + 1}
+                  totalEpisodes={totalEpisodes}
+                  onPlayNext={handlePlayNextFromPrompt}
+                  onCancel={handleCancelNextEpisodePrompt}
+                  autoPlayCountdown={10}
+                />
               )}
             </div>
           </div>

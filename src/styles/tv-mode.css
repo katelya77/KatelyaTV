@@ -1,0 +1,416 @@
+/**
+ * TV Mode Styles
+ * Following Material Design 3 for TV guidelines
+ * https://developer.android.com/design/ui/tv
+ */
+
+/* ============================================
+   CSS Variables for TV Mode
+   ============================================ */
+[data-tv-mode='true'] {
+  /* MD3 TV Layout Variables */
+  --tv-overscan-x: 58px; /* Left/right overscan margin */
+  --tv-overscan-y: 28px; /* Top/bottom overscan margin */
+  --tv-column-width: 52px; /* Column width */
+  --tv-gutter: 20px; /* Column gap */
+  --tv-row-gap: 4px; /* Row gap */
+
+  /* MD3 TV Font Scaling (20% increase for 10-foot viewing) */
+  --tv-font-scale: 1.2;
+
+  /* MD3 TV Focus Styles */
+  --tv-focus-ring-width: 4px;
+  --tv-focus-ring-color: #4caf50;
+  --tv-focus-ring-offset: 4px;
+  --tv-focus-scale: 1.05;
+
+  /* MD3 TV Card Sizes */
+  --tv-card-width-1: 844px;
+  --tv-card-width-2: 412px;
+  --tv-card-width-3: 268px;
+  --tv-card-width-4: 196px;
+  --tv-card-width-5: 124px;
+
+  /* MD3 TV Animation */
+  --tv-transition-duration: 200ms;
+  --tv-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Global TV Mode Adjustments
+   ============================================ */
+
+/* Apply overscan margins to main content areas */
+[data-tv-mode='true'] .main-content,
+[data-tv-mode='true'] main {
+  padding-left: var(--tv-overscan-x);
+  padding-right: var(--tv-overscan-x);
+  padding-top: var(--tv-overscan-y);
+  padding-bottom: var(--tv-overscan-y);
+}
+
+/* Scale base font size for 10-foot viewing */
+[data-tv-mode='true'] body {
+  font-size: calc(1rem * var(--tv-font-scale));
+}
+
+/* ============================================
+   Focus Ring Styles
+   ============================================ */
+
+/* Base focusable element styles */
+[data-tv-mode='true'] [data-tv-focusable='true'] {
+  outline: none;
+  transition: transform var(--tv-transition-duration)
+      var(--tv-transition-easing),
+    box-shadow var(--tv-transition-duration) var(--tv-transition-easing);
+}
+
+/* Focus state - MD3 TV recommended focus indicator */
+[data-tv-mode='true'] [data-tv-focusable='true']:focus {
+  outline: none;
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  position: relative;
+}
+
+/* Focus-visible for keyboard navigation */
+[data-tv-mode='true'] [data-tv-focusable='true']:focus-visible {
+  outline: none;
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  position: relative;
+}
+
+/* ============================================
+   Disable Hover Effects in TV Mode
+   ============================================ */
+
+/* Remove hover transforms and shadows */
+[data-tv-mode='true'] [data-tv-focusable='true']:hover:not(:focus) {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Disable hover on cards */
+[data-tv-mode='true'] .video-card:hover:not(:focus),
+[data-tv-mode='true'] .card:hover:not(:focus) {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Disable hover on buttons */
+[data-tv-mode='true'] button:hover:not(:focus),
+[data-tv-mode='true'] a:hover:not(:focus) {
+  transform: none !important;
+}
+
+/* ============================================
+   VideoCard TV Mode Styles
+   ============================================ */
+
+[data-tv-mode='true'] .video-card {
+  /* Use MD3 TV card sizing */
+  width: var(--tv-card-width-4);
+  margin: calc(var(--tv-gutter) / 2);
+  border-radius: 12px;
+  transition: transform var(--tv-transition-duration)
+      var(--tv-transition-easing),
+    box-shadow var(--tv-transition-duration) var(--tv-transition-easing);
+  /* Ensure proper stacking context for focus state */
+  position: relative;
+}
+
+[data-tv-mode='true'] .video-card:focus {
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 12px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+[data-tv-mode='true'] .video-card:focus-visible {
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 12px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+/* Show overlay and play button on focus in TV mode */
+[data-tv-mode='true'] .video-card:focus .absolute.inset-0.bg-gradient-to-t {
+  opacity: 1;
+}
+
+[data-tv-mode='true']
+  .video-card:focus
+  .absolute.inset-0.flex.items-center.justify-center {
+  opacity: 1;
+}
+
+/* Show action buttons on focus */
+[data-tv-mode='true'] .video-card:focus .absolute.bottom-3.right-3 {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Show douban link on focus */
+[data-tv-mode='true'] .video-card:focus .absolute.top-2.left-2 {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Larger, more readable title */
+[data-tv-mode='true'] .video-card .title,
+[data-tv-mode='true'] .video-card h3 {
+  font-size: calc(1rem * var(--tv-font-scale));
+  font-weight: 600;
+}
+
+/* Title color change on focus */
+[data-tv-mode='true'] .video-card:focus .font-semibold.truncate {
+  color: #4ade80; /* green-400 */
+}
+
+/* Source badge style on focus */
+[data-tv-mode='true'] .video-card:focus .border.rounded {
+  border-color: rgba(74, 222, 128, 0.6); /* green-500/60 */
+  color: #4ade80; /* green-400 */
+}
+
+/* ============================================
+   Content Row - Browse Template
+   ============================================ */
+
+[data-tv-mode='true'] .content-row {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: var(--tv-gutter);
+  padding: var(--tv-row-gap) 0;
+
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[data-tv-mode='true'] .content-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================
+   Grid Layout for TV Mode
+   ============================================ */
+
+[data-tv-mode='true'] .video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--tv-card-width-4));
+  gap: var(--tv-gutter);
+  justify-content: center;
+}
+
+/* Ensure grid items are properly aligned for row-by-row navigation */
+[data-tv-mode='true'] .video-grid > * {
+  /* Ensure consistent sizing for spatial navigation */
+  min-width: 0;
+}
+
+/* VideoCard grid container - ensure proper layout for TV navigation */
+[data-tv-mode='true'] .grid {
+  /* Ensure grid items align properly for D-Pad navigation */
+  align-items: start;
+}
+
+/* Responsive grid for different screen sizes */
+@media (min-width: 1920px) {
+  [data-tv-mode='true'] .video-grid {
+    grid-template-columns: repeat(6, var(--tv-card-width-4));
+  }
+}
+
+@media (min-width: 1280px) and (max-width: 1919px) {
+  [data-tv-mode='true'] .video-grid {
+    grid-template-columns: repeat(5, var(--tv-card-width-4));
+  }
+}
+
+@media (min-width: 960px) and (max-width: 1279px) {
+  [data-tv-mode='true'] .video-grid {
+    grid-template-columns: repeat(4, var(--tv-card-width-4));
+  }
+}
+
+/* ============================================
+   Navigation Drawer Styles
+   ============================================ */
+
+[data-tv-mode='true'] .tv-nav-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform var(--tv-transition-duration)
+    var(--tv-transition-easing);
+  padding: var(--tv-overscan-y) var(--tv-overscan-x);
+}
+
+[data-tv-mode='true'] .tv-nav-drawer.open {
+  transform: translateX(0);
+}
+
+[data-tv-mode='true'] .tv-nav-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--tv-transition-duration) var(--tv-transition-easing);
+}
+
+[data-tv-mode='true'] .tv-nav-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================
+   Episode Selector TV Styles
+   ============================================ */
+
+[data-tv-mode='true'] .episode-btn {
+  transition: transform var(--tv-transition-duration)
+      var(--tv-transition-easing),
+    box-shadow var(--tv-transition-duration) var(--tv-transition-easing),
+    background-color var(--tv-transition-duration) var(--tv-transition-easing);
+}
+
+[data-tv-mode='true'] .episode-btn:focus {
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+/* ============================================
+   Button and Interactive Element Styles
+   ============================================ */
+
+[data-tv-mode='true'] button:focus,
+[data-tv-mode='true'] a:focus,
+[data-tv-mode='true'] [role='button']:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   Hide Elements in TV Mode
+   ============================================ */
+
+/* Hide sidebar in TV mode (use navigation drawer instead) */
+[data-tv-mode='true'] .sidebar {
+  display: none !important;
+}
+
+/* Hide mobile bottom nav in TV mode */
+[data-tv-mode='true'] .mobile-bottom-nav {
+  display: none !important;
+}
+
+/* Hide floating decorative shapes for performance */
+[data-tv-mode='true'] .floating-shapes {
+  display: none !important;
+}
+
+/* ============================================
+   Search Input TV Styles
+   ============================================ */
+
+[data-tv-mode='true'] input[type='text']:focus,
+[data-tv-mode='true'] input[type='search']:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   Search Page TV Styles
+   ============================================ */
+
+/* Search results grid in TV mode */
+[data-tv-mode='true'] .tv-search-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--tv-card-width-4));
+  gap: var(--tv-gutter);
+  justify-content: center;
+  padding: var(--tv-row-gap) 0;
+}
+
+/* Search history buttons in TV mode */
+[data-tv-mode='true'] .tv-history-btn {
+  transition: transform var(--tv-transition-duration)
+      var(--tv-transition-easing),
+    box-shadow var(--tv-transition-duration) var(--tv-transition-easing),
+    background-color var(--tv-transition-duration) var(--tv-transition-easing);
+}
+
+[data-tv-mode='true'] .tv-history-btn:focus {
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+  background-color: rgba(74, 222, 128, 0.2); /* green-400/20 */
+}
+
+/* Ensure search results auto-focus indicator is visible */
+[data-tv-mode='true'] .tv-search-results .video-card:first-child:focus {
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 calc(var(--tv-focus-ring-width) + 2px)
+      var(--tv-focus-ring-color),
+    0 12px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   Player Controls TV Styles
+   ============================================ */
+
+[data-tv-mode='true'] .player-controls button:focus {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Modal/Dialog TV Styles
+   ============================================ */
+
+[data-tv-mode='true'] .modal button:focus,
+[data-tv-mode='true'] [role='dialog'] button:focus {
+  transform: scale(var(--tv-focus-scale));
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Tab Component TV Styles
+   ============================================ */
+
+[data-tv-mode='true'] [role='tab']:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--tv-focus-ring-width) var(--tv-focus-ring-color),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-tv-mode='true'] [role='tablist'] {
+  gap: var(--tv-gutter);
+}

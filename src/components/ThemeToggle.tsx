@@ -35,14 +35,14 @@ export function ThemeToggle() {
     // 检查当前主题，如果 resolvedTheme 为 undefined，默认切换到 dark
     const currentTheme = resolvedTheme || 'light';
     const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
+
     setThemeColor(targetTheme);
-    
+
     // 使用更好的类型定义
     const documentWithTransition = document as Document & {
       startViewTransition?: (callback: () => void) => void;
     };
-    
+
     if (!documentWithTransition.startViewTransition) {
       setTheme(targetTheme);
       return;

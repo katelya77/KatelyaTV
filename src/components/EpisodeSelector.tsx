@@ -5,8 +5,11 @@
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { scrollIntoViewIfNeeded } from '@/lib/tv-utils';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
+
+import { useTVMode } from '@/components/tv/TVModeProvider';
 
 // 定义视频信息类型
 interface VideoInfo {
@@ -56,6 +59,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   precomputedVideoInfo,
 }) => {
   const router = useRouter();
+  const { isTVMode } = useTVMode();
   const pageCount = Math.ceil(totalEpisodes / episodesPerPage);
 
   // 存储每个源的视频信息
@@ -164,6 +168,12 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   const categoryContainerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // TV mode refs for tab navigation
+  const episodesTabRef = useRef<HTMLDivElement>(null);
+  const sourcesTabRef = useRef<HTMLDivElement>(null);
+  const episodeGridRef = useRef<HTMLDivElement>(null);
+  const sourceListRef = useRef<HTMLDivElement>(null);
+
   // 自动滚动到当前分页标签
   useEffect(() => {
     if (categoryContainerRef.current && buttonRefs.current[currentPage]) {
@@ -189,6 +199,67 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
       }
     }
   }, [currentPage]);
+
+  // TV mode: Handle D-Pad left/right for tab switching
+  useEffect(() => {
+    if (!isTVMode) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+
+      // Check if focus is on a tab element
+      const isOnEpisodesTab = episodesTabRef.current?.contains(
+        activeElement as Node
+      );
+      const isOnSourcesTab = sourcesTabRef.current?.contains(
+        activeElement as Node
+      );
+      const isOnTab = isOnEpisodesTab || isOnSourcesTab;
+
+      if (isOnTab) {
+        if (e.key === 'ArrowLeft' || e.key === 'Left') {
+          e.preventDefault();
+          if (activeTab === 'sources' && totalEpisodes > 1) {
+            setActiveTab('episodes');
+            // Focus the episodes tab after state update
+            setTimeout(() => {
+              episodesTabRef.current?.focus();
+            }, 0);
+          }
+        } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+          e.preventDefault();
+          if (activeTab === 'episodes') {
+            setActiveTab('sources');
+            // Focus the sources tab after state update
+            setTimeout(() => {
+              sourcesTabRef.current?.focus();
+            }, 0);
+          }
+        } else if (e.key === 'ArrowDown' || e.key === 'Down') {
+          e.preventDefault();
+          // Move focus to the first item in the active tab content
+          if (activeTab === 'episodes' && episodeGridRef.current) {
+            const firstButton = episodeGridRef.current.querySelector('button');
+            if (firstButton) {
+              (firstButton as HTMLElement).focus();
+              scrollIntoViewIfNeeded(firstButton as HTMLElement);
+            }
+          } else if (activeTab === 'sources' && sourceListRef.current) {
+            const firstItem = sourceListRef.current.querySelector(
+              '[data-tv-focusable="true"]'
+            );
+            if (firstItem) {
+              (firstItem as HTMLElement).focus();
+              scrollIntoViewIfNeeded(firstItem as HTMLElement);
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isTVMode, activeTab, totalEpisodes]);
 
   // 生成分页标签 - 优化显示逻辑
   const categories = Array.from({ length: pageCount }, (_, i) => {
@@ -244,15 +315,31 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   return (
     <div className='md:ml-2 px-4 py-0 min-h-[200px] max-h-[600px] rounded-xl bg-black/10 dark:bg-white/5 flex flex-col border border-white/0 dark:border-white/30 overflow-hidden'>
       {/* 主要的 Tab 切换 - 无缝融入设计 */}
-      <div className='flex mb-1 -mx-6 flex-shrink-0'>
+      <div className='flex mb-1 -mx-6 flex-shrink-0' role='tablist'>
         {totalEpisodes > 1 && (
           <div
+            ref={episodesTabRef}
+            role='tab'
+            aria-selected={activeTab === 'episodes'}
+            tabIndex={isTVMode ? 0 : -1}
             onClick={() => setActiveTab('episodes')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setActiveTab('episodes');
+              }
+            }}
+            data-tv-focusable={isTVMode ? 'true' : undefined}
             className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
                 ${
                   activeTab === 'episodes'
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                }
+                ${
+                  isTVMode
+                    ? 'focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black/10 dark:focus:ring-offset-white/5'
+                    : ''
                 }
             `.trim()}
           >
@@ -260,12 +347,28 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           </div>
         )}
         <div
+          ref={sourcesTabRef}
+          role='tab'
+          aria-selected={activeTab === 'sources'}
+          tabIndex={isTVMode ? 0 : -1}
           onClick={handleSourceTabClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleSourceTabClick();
+            }
+          }}
+          data-tv-focusable={isTVMode ? 'true' : undefined}
           className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
                 ${
                   activeTab === 'sources'
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
+                }
+                ${
+                  isTVMode
+                    ? 'focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black/10 dark:focus:ring-offset-white/5'
+                    : ''
                 }
             `.trim()}
         >
@@ -310,12 +413,19 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         ref={(el) => {
                           buttonRefs.current[idx] = el;
                         }}
+                        tabIndex={isTVMode ? 0 : undefined}
+                        data-tv-focusable={isTVMode ? 'true' : undefined}
                         onClick={() => handleCategoryClick(idx)}
                         className={`${buttonWidth} relative py-2 px-1 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 text-center
                           ${
                             isActive
                               ? 'text-green-500 dark:text-green-400'
                               : 'text-gray-700 hover:text-green-600 dark:text-gray-300 dark:hover:text-green-400'
+                          }
+                          ${
+                            isTVMode
+                              ? 'focus:outline-none focus:ring-2 focus:ring-green-500 focus:rounded'
+                              : ''
                           }
                         `.trim()}
                         title={`第 ${idx * episodesPerPage + 1}-${Math.min(
@@ -335,7 +445,15 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             </div>
             {/* 向上/向下按钮 */}
             <button
-              className='flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-green-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-white/20 transition-colors transform translate-y-[-4px]'
+              tabIndex={isTVMode ? 0 : undefined}
+              data-tv-focusable={isTVMode ? 'true' : undefined}
+              className={`flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center text-gray-700 hover:text-green-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-green-400 dark:hover:bg-white/20 transition-colors transform translate-y-[-4px]
+                ${
+                  isTVMode
+                    ? 'focus:outline-none focus:ring-2 focus:ring-green-500'
+                    : ''
+                }
+              `.trim()}
               onClick={() => {
                 // 切换集数排序（正序/倒序）
                 setDescending((prev) => !prev);
@@ -358,7 +476,13 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           </div>
 
           {/* 集数网格 */}
-          <div className='flex-1 grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] justify-center gap-2 overflow-y-auto pb-4'>
+          <div
+            ref={episodeGridRef}
+            className={`flex-1 grid grid-cols-[repeat(auto-fill,minmax(48px,1fr))] justify-center gap-2 overflow-y-auto pb-4 ${
+              isTVMode ? 'tv-episode-grid' : ''
+            }`}
+            role='tabpanel'
+          >
             {(() => {
               const len = currentEnd - currentStart + 1;
               const episodes = Array.from({ length: len }, (_, i) =>
@@ -370,17 +494,25 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
               return (
                 <button
                   key={episodeNumber}
+                  tabIndex={isTVMode ? 0 : undefined}
+                  data-tv-focusable={isTVMode ? 'true' : undefined}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     handleEpisodeClick(episodeNumber);
                   }}
-                  className={`w-full h-10 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 cursor-pointer
+                  className={`w-full h-10 flex items-center justify-center text-sm font-medium rounded-md transition-all duration-200 cursor-pointer episode-btn
                     ${
                       isActive
                         ? 'bg-green-500 text-white shadow-lg shadow-green-500/25 dark:bg-green-600'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:scale-105 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20'
-                    }`.trim()}
+                    }
+                    ${
+                      isTVMode
+                        ? 'focus:outline-none focus:ring-2 focus:ring-green-500 focus:scale-110 focus:z-10'
+                        : ''
+                    }
+                  `.trim()}
                   type='button'
                 >
                   {episodeNumber}
@@ -430,7 +562,11 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           {!sourceSearchLoading &&
             !sourceSearchError &&
             availableSources.length > 0 && (
-              <div className='flex-1 overflow-y-auto space-y-2 pb-4'>
+              <div
+                ref={sourceListRef}
+                className='flex-1 overflow-y-auto space-y-2 pb-4'
+                role='tabpanel'
+              >
                 {availableSources
                   .sort((a, b) => {
                     const aIsCurrent =
@@ -450,15 +586,36 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     return (
                       <div
                         key={`${source.source}-${source.id}`}
+                        tabIndex={isTVMode ? 0 : undefined}
+                        data-tv-focusable={isTVMode ? 'true' : undefined}
+                        role='option'
+                        aria-selected={isCurrentSource}
                         onClick={() =>
                           !isCurrentSource && handleSourceClick(source)
                         }
+                        onKeyDown={(e) => {
+                          if (
+                            isTVMode &&
+                            (e.key === 'Enter' || e.key === ' ')
+                          ) {
+                            e.preventDefault();
+                            if (!isCurrentSource) {
+                              handleSourceClick(source);
+                            }
+                          }
+                        }}
                         className={`flex items-start gap-3 px-2 py-3 rounded-lg transition-all select-none duration-200 relative
                           ${
                             isCurrentSource
                               ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
                               : 'hover:bg-gray-200/50 dark:hover:bg-white/10 hover:scale-[1.02] cursor-pointer'
-                          }`.trim()}
+                          }
+                          ${
+                            isTVMode
+                              ? 'focus:outline-none focus:ring-2 focus:ring-green-500 focus:scale-[1.02] focus:bg-gray-200/50 dark:focus:bg-white/10'
+                              : ''
+                          }
+                        `.trim()}
                       >
                         {/* 封面 */}
                         <div className='flex-shrink-0 w-12 h-20 bg-gray-300 dark:bg-gray-600 rounded overflow-hidden'>
@@ -574,6 +731,8 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                   })}
                 <div className='flex-shrink-0 mt-auto pt-2 border-t border-gray-400 dark:border-gray-700'>
                   <button
+                    tabIndex={isTVMode ? 0 : undefined}
+                    data-tv-focusable={isTVMode ? 'true' : undefined}
                     onClick={() => {
                       if (videoTitle) {
                         router.push(
@@ -581,7 +740,13 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         );
                       }
                     }}
-                    className='w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors py-2'
+                    className={`w-full text-center text-xs text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors py-2
+                      ${
+                        isTVMode
+                          ? 'focus:outline-none focus:ring-2 focus:ring-green-500 focus:text-green-500 dark:focus:text-green-400 rounded'
+                          : ''
+                      }
+                    `.trim()}
                   >
                     影片匹配有误？点击去搜索
                   </button>

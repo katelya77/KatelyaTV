@@ -34,7 +34,8 @@ function VersionDisplay() {
     <button
       onClick={() =>
         window.open(
-          process.env.NEXT_PUBLIC_REPO_URL || 'https://github.com/katelya77/KatelyaTV',
+          process.env.NEXT_PUBLIC_REPO_URL ||
+            'https://github.com/katelya77/KatelyaTV',
           '_blank'
         )
       }
@@ -84,10 +85,10 @@ function LoginPageClient() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storageType = window.RUNTIME_CONFIG?.STORAGE_TYPE;
-      setShouldAskUsername(Boolean(storageType && storageType !== 'localstorage'));
-      setEnableRegister(
-        Boolean(window.RUNTIME_CONFIG?.ENABLE_REGISTER)
+      setShouldAskUsername(
+        Boolean(storageType && storageType !== 'localstorage')
       );
+      setEnableRegister(Boolean(window.RUNTIME_CONFIG?.ENABLE_REGISTER));
     }
   }, []);
 

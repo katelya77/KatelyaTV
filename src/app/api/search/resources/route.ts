@@ -25,7 +25,10 @@ export async function GET() {
     });
     return addCorsHeaders(response);
   } catch (error) {
-    const response = NextResponse.json({ error: '获取资源失败' }, { status: 500 });
+    const response = NextResponse.json(
+      { error: '获取资源失败' },
+      { status: 500 }
+    );
     return addCorsHeaders(response);
   }
 }

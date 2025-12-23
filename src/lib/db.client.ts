@@ -1442,7 +1442,9 @@ export async function saveSkipConfig(
 /**
  * 获取所有跳过配置
  */
-export async function getAllSkipConfigs(): Promise<Record<string, EpisodeSkipConfig>> {
+export async function getAllSkipConfigs(): Promise<
+  Record<string, EpisodeSkipConfig>
+> {
   try {
     if (STORAGE_TYPE === 'localstorage') {
       // localStorage 模式
@@ -1496,7 +1498,10 @@ export async function getAllSkipConfigs(): Promise<Record<string, EpisodeSkipCon
 /**
  * 删除跳过配置
  */
-export async function deleteSkipConfig(source: string, id: string): Promise<void> {
+export async function deleteSkipConfig(
+  source: string,
+  id: string
+): Promise<void> {
   try {
     const key = generateSkipConfigKey(source, id);
 

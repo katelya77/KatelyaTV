@@ -188,10 +188,7 @@ export class DbManager {
   }
 
   // ---------- 跳过配置 ----------
-  async getSkipConfig(
-    userName: string,
-    key: string
-  ): Promise<any> {
+  async getSkipConfig(userName: string, key: string): Promise<any> {
     if (typeof (this.storage as any).getSkipConfig === 'function') {
       return (this.storage as any).getSkipConfig(userName, key);
     }
@@ -208,19 +205,14 @@ export class DbManager {
     }
   }
 
-  async getAllSkipConfigs(
-    userName: string
-  ): Promise<{ [key: string]: any }> {
+  async getAllSkipConfigs(userName: string): Promise<{ [key: string]: any }> {
     if (typeof (this.storage as any).getAllSkipConfigs === 'function') {
       return (this.storage as any).getAllSkipConfigs(userName);
     }
     return {};
   }
 
-  async deleteSkipConfig(
-    userName: string,
-    key: string
-  ): Promise<void> {
+  async deleteSkipConfig(userName: string, key: string): Promise<void> {
     if (typeof (this.storage as any).deleteSkipConfig === 'function') {
       await (this.storage as any).deleteSkipConfig(userName, key);
     }

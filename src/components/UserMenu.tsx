@@ -2,13 +2,15 @@
 
 'use client';
 
-import { KeyRound, LogOut, Settings, Shield, Tv, User, X } from 'lucide-react';
+import { KeyRound, LogOut, Settings, Shield, User, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import { checkForUpdates, CURRENT_VERSION, UpdateStatus } from '@/lib/version';
+
+import { TVModeToggle } from '@/components/tv/TVModeToggle';
 
 interface AuthInfo {
   username?: string;
@@ -369,12 +371,15 @@ export const UserMenu: React.FC = () => {
             <span className='font-medium'>设置</span>
           </button>
 
+          {/* TV 模式切换 - Requirements: 1.1, 1.6 */}
+          <TVModeToggle variant='menu-item' />
+
           {/* TVBox配置按钮 */}
           <button
             onClick={handleTVBoxConfig}
             className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors text-sm'
           >
-            <Tv className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+            <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
             <span className='font-medium'>TVBox配置</span>
           </button>
 

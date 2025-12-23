@@ -24,7 +24,9 @@ function checkCommand(command) {
 
 function getVersion(command) {
   try {
-    const version = execSync(`${command} --version`, { encoding: 'utf8' }).trim();
+    const version = execSync(`${command} --version`, {
+      encoding: 'utf8',
+    }).trim();
     return version;
   } catch {
     return 'unknown';
@@ -78,7 +80,11 @@ if (hasPnpm && hasPnpmLock) {
 if (!hasPnpm && hasNpm) {
   console.log('\n🚀 pnpm 安装建议 (可选):');
   console.log('   npm install -g pnpm           # 通过npm安装');
-  console.log('   corepack enable && corepack prepare pnpm@latest --activate  # 通过corepack');
+  console.log(
+    '   corepack enable && corepack prepare pnpm@latest --activate  # 通过corepack'
+  );
 }
 
-console.log('\n✨ KatelyaTV 支持智能包管理器检测，任何包管理器都可以正常工作！');
+console.log(
+  '\n✨ KatelyaTV 支持智能包管理器检测，任何包管理器都可以正常工作！'
+);

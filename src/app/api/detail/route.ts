@@ -17,12 +17,18 @@ export async function GET(request: Request) {
   const sourceCode = searchParams.get('source');
 
   if (!id || !sourceCode) {
-    const response = NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
+    const response = NextResponse.json(
+      { error: '缺少必要参数' },
+      { status: 400 }
+    );
     return addCorsHeaders(response);
   }
 
   if (!/^[\w-]+$/.test(id)) {
-    const response = NextResponse.json({ error: '无效的视频ID格式' }, { status: 400 });
+    const response = NextResponse.json(
+      { error: '无效的视频ID格式' },
+      { status: 400 }
+    );
     return addCorsHeaders(response);
   }
 
@@ -31,7 +37,10 @@ export async function GET(request: Request) {
     const apiSite = apiSites.find((site) => site.key === sourceCode);
 
     if (!apiSite) {
-      const response = NextResponse.json({ error: '无效的API来源' }, { status: 400 });
+      const response = NextResponse.json(
+        { error: '无效的API来源' },
+        { status: 400 }
+      );
       return addCorsHeaders(response);
     }
 

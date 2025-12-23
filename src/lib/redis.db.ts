@@ -354,7 +354,8 @@ export class RedisStorage implements IStorage {
 function getRedisClient(): RedisClientType {
   const legacyKey = Symbol.for('__MOONTV_REDIS_CLIENT__');
   const globalKey = Symbol.for('__KATELYATV_REDIS_CLIENT__');
-  let client: RedisClientType | undefined = (global as any)[globalKey] || (global as any)[legacyKey];
+  let client: RedisClientType | undefined =
+    (global as any)[globalKey] || (global as any)[legacyKey];
 
   if (!client) {
     const url = process.env.REDIS_URL;

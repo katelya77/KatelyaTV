@@ -1,7 +1,13 @@
 import { CheckCircle, Heart, Link, PlayCircleIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   type Favorite,
@@ -12,10 +18,12 @@ import {
   saveFavorite,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { scrollIntoViewIfNeeded } from '@/lib/tv-utils';
 import { SearchResult } from '@/lib/types';
 import { processImageUrl } from '@/lib/utils';
 
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
+import { useTVModeOptional } from '@/components/tv/TVModeProvider';
 
 interface VideoCardProps {
   id?: string;
@@ -35,6 +43,7 @@ interface VideoCardProps {
   items?: SearchResult[];
   type?: string;
   size?: 'default' | 'small';
+  tvFocusable?: boolean; // Whether the card is focusable in TV mode
 }
 
 export default function VideoCard({
@@ -55,10 +64,14 @@ export default function VideoCard({
   items,
   type = '',
   size = 'default',
+  tvFocusable = true,
 }: VideoCardProps) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const tvModeContext = useTVModeOptional();
+  const isTVMode = tvModeContext?.isTVMode ?? false;
 
   const isAggregate = from === 'search' && !!items?.length;
 
@@ -270,12 +283,49 @@ export default function VideoCard({
 
   const isSmall = size === 'small';
 
+  // Handle keyboard events for TV mode (Enter key to activate)
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!isTVMode) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleClick();
+      }
+    },
+    [isTVMode, handleClick]
+  );
+
+  // Handle focus event for TV mode - scroll into view
+  const handleFocus = useCallback(() => {
+    if (isTVMode && cardRef.current) {
+      scrollIntoViewIfNeeded(cardRef.current, {
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest',
+        margin: 80, // Extra margin for TV overscan
+      });
+    }
+  }, [isTVMode]);
+
+  // TV mode specific props
+  const tvModeProps =
+    isTVMode && tvFocusable
+      ? {
+          tabIndex: 0,
+          'data-tv-focusable': 'true',
+          onKeyDown: handleKeyDown,
+          onFocus: handleFocus,
+        }
+      : {};
+
   return (
     <div
-      className={`group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1] hover:z-[500] ${
+      ref={cardRef}
+      className={`video-card group relative w-full rounded-lg bg-transparent cursor-pointer transition-all duration-300 ease-in-out hover:scale-[1] hover:z-[500] ${
         isSmall ? 'scale-75 origin-top-left' : ''
-      }`}
+      } ${isTVMode ? 'focus:outline-none' : ''}`}
       onClick={handleClick}
+      {...tvModeProps}
     >
       {/* 海报容器 */}
       <div className='relative aspect-[2/3] overflow-hidden rounded-lg'>

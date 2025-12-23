@@ -203,7 +203,10 @@ export class KvrocksStorage implements IStorage {
     return `u:${userName}:skip_config:${key}`;
   }
 
-  async getSkipConfig(userName: string, key: string): Promise<EpisodeSkipConfig | null> {
+  async getSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<EpisodeSkipConfig | null> {
     const val = await withRetry(() =>
       this.client.get(this.skipConfigKey(userName, key))
     );
@@ -224,7 +227,9 @@ export class KvrocksStorage implements IStorage {
     await withRetry(() => this.client.del(this.skipConfigKey(userName, key)));
   }
 
-  async getAllSkipConfigs(userName: string): Promise<Record<string, EpisodeSkipConfig>> {
+  async getAllSkipConfigs(
+    userName: string
+  ): Promise<Record<string, EpisodeSkipConfig>> {
     const pattern = `u:${userName}:skip_config:*`;
     const keys = await withRetry(() => this.client.keys(pattern));
     const result: Record<string, EpisodeSkipConfig> = {};
@@ -267,7 +272,9 @@ export class KvrocksStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<string[]> {
-    const users = await withRetry(() => this.client.sMembers(this.userListKey()));
+    const users = await withRetry(() =>
+      this.client.sMembers(this.userListKey())
+    );
     return ensureStringArray(users);
   }
 
@@ -360,7 +367,9 @@ export function getKvrocksClient(): RedisClientType {
         connectTimeout: 10000, // 10秒连接超时
         reconnectStrategy: (retries: number) => {
           const delay = Math.min(retries * 50, 2000);
-          console.log(`🔄 Kvrocks reconnecting in ${delay}ms (attempt ${retries})`);
+          console.log(
+            `🔄 Kvrocks reconnecting in ${delay}ms (attempt ${retries})`
+          );
           return delay;
         },
       },

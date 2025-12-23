@@ -19,11 +19,11 @@ const _README_MD = path.join(__dirname, '../README.md');
 
 // 版本类型
 const VERSION_TYPES = {
-  MAJOR: 'major',    // 主版本号 (x.0.0)
-  MINOR: 'minor',    // 次版本号 (0.x.0)
-  PATCH: 'patch',    // 修订版本号 (0.0.x)
-  PRE: 'pre',        // 预发布版本
-  BUILD: 'build'     // 构建版本
+  MAJOR: 'major', // 主版本号 (x.0.0)
+  MINOR: 'minor', // 次版本号 (0.x.0)
+  PATCH: 'patch', // 修订版本号 (0.0.x)
+  PRE: 'pre', // 预发布版本
+  BUILD: 'build', // 构建版本
 };
 
 // 颜色输出
@@ -35,7 +35,7 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   magenta: '\x1b[35m',
-  cyan: '\x1b[36m'
+  cyan: '\x1b[36m',
 };
 
 function log(message, color = 'reset') {
@@ -82,10 +82,10 @@ function getVersionTxt() {
 function updateVersion(type, preRelease = null) {
   const currentVersion = getCurrentVersion();
   const [major, minor, patch] = currentVersion.split('.').map(Number);
-  
+
   let newVersion;
   let newVersionTxt;
-  
+
   switch (type) {
     case VERSION_TYPES.MAJOR:
       newVersion = `${major + 1}.0.0`;
@@ -108,16 +108,17 @@ function updateVersion(type, preRelease = null) {
     default:
       error(`不支持的版本类型: ${type}`);
   }
-  
+
   // 生成新的版本时间戳
   const now = new Date();
-  newVersionTxt = now.getFullYear().toString() +
-                  String(now.getMonth() + 1).padStart(2, '0') +
-                  String(now.getDate()).padStart(2, '0') +
-                  String(now.getHours()).padStart(2, '0') +
-                  String(now.getMinutes()).padStart(2, '0') +
-                  String(now.getSeconds()).padStart(2, '0');
-  
+  newVersionTxt =
+    now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(now.getHours()).padStart(2, '0') +
+    String(now.getMinutes()).padStart(2, '0') +
+    String(now.getSeconds()).padStart(2, '0');
+
   return { newVersion, newVersionTxt };
 }
 
@@ -148,7 +149,7 @@ function updateChangelog(newVersion, type) {
   try {
     const changelog = fs.readFileSync(CHANGELOG_MD, 'utf8');
     const today = new Date().toISOString().split('T')[0];
-    
+
     // 创建新版本条目
     const newEntry = `## [${newVersion}] - ${today}
 
@@ -191,7 +192,7 @@ docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io
       '## [未发布]',
       `## [未发布]\n\n### 计划中\n- 弹幕系统支持\n- 字幕文件支持\n- 下载功能\n- 社交分享功能\n- 用户评分系统\n\n${newEntry}`
     );
-    
+
     fs.writeFileSync(CHANGELOG_MD, updatedChangelog);
     success('CHANGELOG.md 已更新');
   } catch (err) {
@@ -213,7 +214,9 @@ function createGitTag(version) {
 function commitChanges(version) {
   try {
     execSync('git add .', { stdio: 'inherit' });
-    execSync(`git commit -m "chore: bump version to ${version}"`, { stdio: 'inherit' });
+    execSync(`git commit -m "chore: bump version to ${version}"`, {
+      stdio: 'inherit',
+    });
     success('版本更改已提交到 Git');
   } catch (err) {
     warning(`Git 提交失败: ${err.message}`);
@@ -258,13 +261,15 @@ ${colors.bright}MoonTV 版本管理脚本${colors.reset}
 function showVersionInfo() {
   const packageVersion = getCurrentVersion();
   const versionTxt = getVersionTxt();
-  
+
   console.log(`
 ${colors.bright}当前版本信息:${colors.reset}
 
 📦 Package.json 版本: ${colors.green}${packageVersion}${colors.reset}
 📅 VERSION.txt: ${colors.blue}${versionTxt}${colors.reset}
-📋 版本类型: ${colors.yellow}${packageVersion.includes('-') ? '预发布版本' : '正式版本'}${colors.reset}
+📋 版本类型: ${colors.yellow}${
+    packageVersion.includes('-') ? '预发布版本' : '正式版本'
+  }${colors.reset}
 
 💡 使用 'node scripts/version-manager.js help' 查看所有可用命令
 `);
@@ -273,29 +278,34 @@ ${colors.bright}当前版本信息:${colors.reset}
 // 主函数
 function main() {
   const args = process.argv.slice(2);
-  
-  if (args.length === 0 || args.includes('help') || args.includes('--help') || args.includes('-h')) {
+
+  if (
+    args.length === 0 ||
+    args.includes('help') ||
+    args.includes('--help') ||
+    args.includes('-h')
+  ) {
     showHelp();
     return;
   }
-  
+
   if (args.includes('show')) {
     showVersionInfo();
     return;
   }
-  
+
   const command = args[0];
   const options = {
     noCommit: args.includes('--no-commit'),
     noTag: args.includes('--no-tag'),
-    noChangelog: args.includes('--no-changelog')
+    noChangelog: args.includes('--no-changelog'),
   };
-  
+
   // 验证命令
   if (!Object.values(VERSION_TYPES).includes(command)) {
     error(`无效的命令: ${command}`);
   }
-  
+
   // 获取预发布标识符
   let preRelease = null;
   if (command === VERSION_TYPES.PRE) {
@@ -304,35 +314,35 @@ function main() {
     }
     preRelease = args[1];
   }
-  
+
   info(`开始更新版本...`);
   info(`当前版本: ${getCurrentVersion()}`);
-  
+
   // 更新版本
   const { newVersion, newVersionTxt } = updateVersion(command, preRelease);
   info(`新版本: ${newVersion}`);
-  
+
   // 更新文件
   updatePackageJson(newVersion);
   updateVersionTxt(newVersionTxt);
-  
+
   if (!options.noChangelog) {
     updateChangelog(newVersion, command);
   }
-  
+
   // Git 操作
   if (!options.noCommit) {
     commitChanges(newVersion);
   }
-  
+
   if (!options.noTag) {
     createGitTag(newVersion);
   }
-  
+
   success(`\n🎉 版本更新完成!`);
   success(`新版本: ${newVersion}`);
   success(`时间戳: ${newVersionTxt}`);
-  
+
   if (!options.noCommit) {
     info('提示: 使用 "git push --tags" 推送标签到远程仓库');
   }
@@ -350,5 +360,5 @@ module.exports = {
   updateVersion,
   updatePackageJson,
   updateVersionTxt,
-  updateChangelog
+  updateChangelog,
 };

@@ -543,7 +543,7 @@ export class D1Storage implements IStorage {
         .all<any>();
 
       const configs: { [key: string]: EpisodeSkipConfig } = {};
-      
+
       for (const row of result.results) {
         configs[row.key] = {
           source: row.source,

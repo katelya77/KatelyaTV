@@ -11,7 +11,7 @@ const config: Config = {
   theme: {
     extend: {
       screens: {
-        'xs': '475px',
+        xs: '475px',
         'mobile-landscape': {
           raw: '(orientation: landscape) and (max-height: 700px)',
         },

@@ -4,7 +4,7 @@
 
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 
 // 客户端收藏 API
 import {
@@ -21,6 +21,9 @@ import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
 import { useSite } from '@/components/SiteProvider';
+import { TVExitConfirmDialog } from '@/components/tv/TVExitConfirmDialog';
+import { useTVModeOptional } from '@/components/tv/TVModeProvider';
+import { useTVBackHandler } from '@/components/tv/useTVBackHandler';
 import VideoCard from '@/components/VideoCard';
 
 // 主内容区大型 KatelyaTV Logo 组件 - 已隐藏但保留代码以备后用
@@ -77,6 +80,32 @@ function HomeClient() {
   const { announcement } = useSite();
 
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  // TV mode exit confirmation dialog state
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const tvModeContext = useTVModeOptional();
+  const isTVMode = tvModeContext?.isTVMode ?? false;
+
+  // Handle exit confirmation dialog
+  const handleShowExitConfirm = useCallback(() => {
+    setShowExitConfirm(true);
+  }, []);
+
+  const handleCloseExitConfirm = useCallback(() => {
+    setShowExitConfirm(false);
+  }, []);
+
+  const handleConfirmExit = useCallback(() => {
+    setShowExitConfirm(false);
+    // The actual exit logic is handled in TVExitConfirmDialog
+  }, []);
+
+  // Use TV back handler for home page
+  useTVBackHandler({
+    isHomePage: true,
+    onShowExitConfirm: handleShowExitConfirm,
+    enabled: isTVMode,
+  });
 
   // 检查公告弹窗状态
   useEffect(() => {
@@ -440,6 +469,15 @@ function HomeClient() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* TV Mode Exit Confirmation Dialog */}
+      {isTVMode && (
+        <TVExitConfirmDialog
+          isOpen={showExitConfirm}
+          onClose={handleCloseExitConfirm}
+          onConfirm={handleConfirmExit}
+        />
       )}
     </PageLayout>
   );

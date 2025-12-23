@@ -15,7 +15,10 @@ export async function GET(request: Request) {
   const imageUrl = searchParams.get('url');
 
   if (!imageUrl) {
-    const response = NextResponse.json({ error: 'Missing image URL' }, { status: 400 });
+    const response = NextResponse.json(
+      { error: 'Missing image URL' },
+      { status: 400 }
+    );
     return addCorsHeaders(response);
   }
 

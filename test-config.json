@@ -7,7 +7,7 @@
       "detail": "https://test.example.com"
     },
     "another_test": {
-      "api": "https://another.example.com/api.php/provide/vod", 
+      "api": "https://another.example.com/api.php/provide/vod",
       "name": "另一个测试源"
     }
   }

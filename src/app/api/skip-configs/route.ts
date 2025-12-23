@@ -19,10 +19,10 @@ export async function POST(request: NextRequest) {
 
     // 获取认证信息
     const authInfo = getAuthInfoFromCookie(request);
-    
+
     // 如果是直接传入的认证信息（客户端模式），使用传入的信息
     const finalUsername = username || authInfo?.username;
-    
+
     if (!finalUsername) {
       return NextResponse.json({ error: '用户未登录' }, { status: 401 });
     }
@@ -42,12 +42,23 @@ export async function POST(request: NextRequest) {
 
       case 'set': {
         if (!key || !config) {
-          return NextResponse.json({ error: '缺少配置键或配置数据' }, { status: 400 });
+          return NextResponse.json(
+            { error: '缺少配置键或配置数据' },
+            { status: 400 }
+          );
         }
 
         // 验证配置数据结构
-        if (!config.source || !config.id || !config.title || !Array.isArray(config.segments)) {
-          return NextResponse.json({ error: '配置数据格式错误' }, { status: 400 });
+        if (
+          !config.source ||
+          !config.id ||
+          !config.title ||
+          !Array.isArray(config.segments)
+        ) {
+          return NextResponse.json(
+            { error: '配置数据格式错误' },
+            { status: 400 }
+          );
         }
 
         // 验证片段数据
@@ -58,11 +69,18 @@ export async function POST(request: NextRequest) {
             segment.start >= segment.end ||
             !['opening', 'ending'].includes(segment.type)
           ) {
-            return NextResponse.json({ error: '片段数据格式错误' }, { status: 400 });
+            return NextResponse.json(
+              { error: '片段数据格式错误' },
+              { status: 400 }
+            );
           }
         }
 
-        await storage.setSkipConfig(finalUsername, key, config as EpisodeSkipConfig);
+        await storage.setSkipConfig(
+          finalUsername,
+          key,
+          config as EpisodeSkipConfig
+        );
         return NextResponse.json({ success: true });
       }
 
@@ -81,14 +99,14 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        return NextResponse.json({ error: '不支持的操作类型' }, { status: 400 });
+        return NextResponse.json(
+          { error: '不支持的操作类型' },
+          { status: 400 }
+        );
     }
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('跳过配置 API 错误:', error);
-    return NextResponse.json(
-      { error: '服务器内部错误' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '服务器内部错误' }, { status: 500 });
   }
 }

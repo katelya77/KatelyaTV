@@ -20,6 +20,7 @@
 ### 本地开发设置
 
 1. **Fork 项目**
+
    ```bash
    # 在 GitHub 上 Fork 本仓库
    # 然后克隆到本地
@@ -28,20 +29,23 @@
    ```
 
 2. **安装依赖**
+
    ```bash
    pnpm install
    ```
 
 3. **环境配置**
+
    ```bash
    # 复制环境变量文件
    cp .env.example .env.local
-   
+
    # 编辑环境变量
    nano .env.local
    ```
 
 4. **启动开发服务器**
+
    ```bash
    pnpm dev
    ```
@@ -122,30 +126,37 @@ git commit -m "test: 添加播放记录 API 测试用例"
 
 ```markdown
 ## Bug 描述
+
 简要描述 Bug 的现象
 
 ## 重现步骤
+
 1. 打开应用
 2. 执行操作 A
 3. 执行操作 B
 4. 观察结果
 
 ## 预期行为
+
 描述期望的正确行为
 
 ## 实际行为
+
 描述实际发生的错误行为
 
 ## 环境信息
+
 - 操作系统：Windows 11 / macOS 14 / Ubuntu 22.04
 - 浏览器：Chrome 120 / Firefox 121 / Safari 17
 - 设备：桌面 / 移动端
 - 存储类型：localStorage / Redis / D1 / Upstash
 
 ## 截图/日志
+
 如果适用，请提供截图或错误日志
 
 ## 其他信息
+
 任何其他相关信息
 ```
 
@@ -161,23 +172,29 @@ git commit -m "test: 添加播放记录 API 测试用例"
 
 ```markdown
 ## 功能描述
+
 简要描述您希望添加的功能
 
 ## 使用场景
+
 描述在什么情况下这个功能会很有用
 
 ## 实现建议
+
 如果有的话，提供实现思路或技术建议
 
 ## 替代方案
+
 描述是否已有其他方式可以实现类似功能
 
 ## 优先级
+
 - [ ] 高 - 核心功能，影响用户体验
 - [ ] 中 - 有用功能，但不是必需的
 - [ ] 低 - 锦上添花的功能
 
 ## 其他信息
+
 任何其他相关信息
 ```
 
@@ -186,16 +203,19 @@ git commit -m "test: 添加播放记录 API 测试用例"
 #### 提交 Pull Request
 
 1. **创建功能分支**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **开发功能**
+
    - 编写代码
    - 添加测试用例
    - 更新文档
 
 3. **代码检查**
+
    ```bash
    pnpm lint
    pnpm typecheck
@@ -203,12 +223,14 @@ git commit -m "test: 添加播放记录 API 测试用例"
    ```
 
 4. **提交代码**
+
    ```bash
    git add .
    git commit -m "feat: 添加新功能描述"
    ```
 
 5. **推送分支**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -222,9 +244,11 @@ git commit -m "test: 添加播放记录 API 测试用例"
 
 ```markdown
 ## 变更描述
+
 简要描述本次 PR 的变更内容
 
 ## 变更类型
+
 - [ ] Bug 修复
 - [ ] 新功能
 - [ ] 文档更新
@@ -234,11 +258,13 @@ git commit -m "test: 添加播放记录 API 测试用例"
 - [ ] 其他
 
 ## 测试
+
 - [ ] 本地测试通过
 - [ ] 添加了新的测试用例
 - [ ] 所有测试用例通过
 
 ## 检查清单
+
 - [ ] 代码符合项目规范
 - [ ] 更新了相关文档
 - [ ] 添加了必要的注释
@@ -246,12 +272,15 @@ git commit -m "test: 添加播放记录 API 测试用例"
 - [ ] 测试覆盖率没有降低
 
 ## 相关 Issue
+
 关联的 Issue 编号：#123
 
 ## 截图
+
 如果涉及 UI 变更，请提供截图
 
 ## 其他信息
+
 任何其他相关信息
 ```
 
@@ -286,11 +315,11 @@ describe('VideoCard', () => {
       poster: '/test-poster.jpg',
       year: '2024',
       source: 'test-source',
-      source_name: '测试源'
+      source_name: '测试源',
     };
 
     render(<VideoCard {...mockProps} />);
-    
+
     expect(screen.getByText('测试视频')).toBeInTheDocument();
   });
 });

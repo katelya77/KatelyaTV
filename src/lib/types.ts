@@ -76,9 +76,18 @@ export interface IStorage {
   deleteSearchHistory(userName: string, keyword?: string): Promise<void>;
 
   // 片头片尾跳过配置相关
-  getSkipConfig(userName: string, key: string): Promise<EpisodeSkipConfig | null>;
-  setSkipConfig(userName: string, key: string, config: EpisodeSkipConfig): Promise<void>;
-  getAllSkipConfigs(userName: string): Promise<{ [key: string]: EpisodeSkipConfig }>;
+  getSkipConfig(
+    userName: string,
+    key: string
+  ): Promise<EpisodeSkipConfig | null>;
+  setSkipConfig(
+    userName: string,
+    key: string,
+    config: EpisodeSkipConfig
+  ): Promise<void>;
+  getAllSkipConfigs(
+    userName: string
+  ): Promise<{ [key: string]: EpisodeSkipConfig }>;
   deleteSkipConfig(userName: string, key: string): Promise<void>;
 
   // 用户列表

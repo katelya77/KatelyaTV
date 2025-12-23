@@ -24,7 +24,7 @@ function convertEdgeToNodeRuntime() {
     for (const file of files) {
       const fullPath = path.join(dir, file);
       const stat = fs.statSync(fullPath);
-      
+
       if (stat.isDirectory()) {
         findRouteFiles(fullPath);
       } else if (file === 'route.ts') {
@@ -36,42 +36,49 @@ function convertEdgeToNodeRuntime() {
   findRouteFiles(srcDir);
 
   console.log(`📁 找到 ${routeFiles.length} 个 API 路由文件:`);
-  
+
   let convertedCount = 0;
-  
+
   for (const routeFile of routeFiles) {
     const content = fs.readFileSync(routeFile, 'utf8');
-    
+
     if (content.includes("export const runtime = 'edge';")) {
-      console.log(`   ✓ ${path.relative(__dirname, routeFile)} - 包含 Edge Runtime`);
-      
+      console.log(
+        `   ✓ ${path.relative(__dirname, routeFile)} - 包含 Edge Runtime`
+      );
+
       // 在测试中我们不实际修改文件，只是检查
       // const newContent = content.replace(/export const runtime = 'edge';/g, "export const runtime = 'nodejs';");
       // fs.writeFileSync(routeFile, newContent);
-      
+
       convertedCount++;
     } else {
-      console.log(`   ⚠ ${path.relative(__dirname, routeFile)} - 未找到 Edge Runtime 配置`);
+      console.log(
+        `   ⚠ ${path.relative(__dirname, routeFile)} - 未找到 Edge Runtime 配置`
+      );
     }
   }
-  
+
   console.log(`\n🔄 Docker 构建将转换 ${convertedCount} 个文件的 Runtime 配置`);
   console.log('   Edge Runtime → Node.js Runtime');
-  
+
   return convertedCount;
 }
 
 // 检查跳过配置 API 是否包含在转换列表中
 function checkSkipConfigsAPI() {
-  const skipConfigsRoute = path.join(__dirname, '../src/app/api/skip-configs/route.ts');
-  
+  const skipConfigsRoute = path.join(
+    __dirname,
+    '../src/app/api/skip-configs/route.ts'
+  );
+
   if (!fs.existsSync(skipConfigsRoute)) {
     console.error('❌ 跳过配置 API 路由文件不存在!');
     return false;
   }
-  
+
   const content = fs.readFileSync(skipConfigsRoute, 'utf8');
-  
+
   if (content.includes("export const runtime = 'edge';")) {
     console.log('✅ 跳过配置 API 正确配置了 Edge Runtime');
     console.log('   Docker 部署时将自动转换为 Node.js Runtime');
@@ -85,23 +92,25 @@ function checkSkipConfigsAPI() {
 // 检查存储后端兼容性
 function checkStorageCompatibility() {
   console.log('\n🗄️ 检查存储后端兼容性...');
-  
+
   const storageFiles = [
     '../src/lib/localstorage.db.ts',
-    '../src/lib/redis.db.ts', 
+    '../src/lib/redis.db.ts',
     '../src/lib/d1.db.ts',
-    '../src/lib/upstash.db.ts'
+    '../src/lib/upstash.db.ts',
   ];
-  
+
   for (const storageFile of storageFiles) {
     const filePath = path.join(__dirname, storageFile);
     if (fs.existsSync(filePath)) {
       const content = fs.readFileSync(filePath, 'utf8');
-      
-      if (content.includes('getSkipConfig') && 
-          content.includes('setSkipConfig') && 
-          content.includes('getAllSkipConfigs') && 
-          content.includes('deleteSkipConfig')) {
+
+      if (
+        content.includes('getSkipConfig') &&
+        content.includes('setSkipConfig') &&
+        content.includes('getAllSkipConfigs') &&
+        content.includes('deleteSkipConfig')
+      ) {
         console.log(`   ✓ ${path.basename(storageFile)} - 支持跳过配置功能`);
       } else {
         console.log(`   ⚠ ${path.basename(storageFile)} - 缺少跳过配置方法`);

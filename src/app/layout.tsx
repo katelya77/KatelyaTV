@@ -2,12 +2,14 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 
 import './globals.css';
+import '@/styles/tv-mode.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 import { getConfig } from '@/lib/config';
 
 import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
+import { TVModeProvider } from '../components/tv/TVModeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -94,14 +96,12 @@ export default async function RootLayout({
         {/* 浮动几何形状装饰 */}
         <FloatingShapes />
 
-        <ThemeProvider
-          attribute='class'
-          defaultTheme='system'
-          enableSystem
-        >
-          <SiteProvider siteName={siteName} announcement={announcement}>
-            {children}
-          </SiteProvider>
+        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+          <TVModeProvider>
+            <SiteProvider siteName={siteName} announcement={announcement}>
+              {children}
+            </SiteProvider>
+          </TVModeProvider>
         </ThemeProvider>
       </body>
     </html>

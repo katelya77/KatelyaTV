@@ -8,28 +8,28 @@ const PARSE_APIS = [
   {
     name: '无名小站',
     url: 'https://jx.aidouer.net/?url=',
-    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili']
+    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili'],
   },
   {
     name: '虾米解析',
     url: 'https://jx.xmflv.com/?url=',
-    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili', 'sohu']
+    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili', 'sohu'],
   },
   {
     name: '爱豆解析',
     url: 'https://jx.aidouer.net/?url=',
-    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili']
+    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili'],
   },
   {
     name: '8090解析',
     url: 'https://www.8090g.cn/?url=',
-    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili']
+    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili'],
   },
   {
     name: 'OK解析',
     url: 'https://okjx.cc/?url=',
-    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili']
-  }
+    support: ['qq', 'iqiyi', 'youku', 'mgtv', 'bilibili'],
+  },
 ];
 
 // 检测视频URL的平台类型
@@ -49,8 +49,8 @@ function detectPlatform(url: string): string {
 
 // 获取适用的解析接口
 function getCompatibleParsers(platform: string) {
-  return PARSE_APIS.filter(api => 
-    api.support.includes(platform) || platform === 'unknown'
+  return PARSE_APIS.filter(
+    (api) => api.support.includes(platform) || platform === 'unknown'
   );
 }
 
@@ -62,10 +62,7 @@ export async function GET(request: NextRequest) {
     const format = searchParams.get('format') || 'json'; // 返回格式
 
     if (!url) {
-      return NextResponse.json(
-        { error: '缺少url参数' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '缺少url参数' }, { status: 400 });
     }
 
     // 检测平台类型
@@ -74,10 +71,10 @@ export async function GET(request: NextRequest) {
 
     if (compatibleParsers.length === 0) {
       return NextResponse.json(
-        { 
+        {
           error: '暂不支持该平台的视频解析',
           platform,
-          url 
+          url,
         },
         { status: 400 }
       );
@@ -86,7 +83,7 @@ export async function GET(request: NextRequest) {
     // 如果指定了解析器，优先使用
     let selectedParser = compatibleParsers[0];
     if (parser) {
-      const customParser = PARSE_APIS.find(api => 
+      const customParser = PARSE_APIS.find((api) =>
         api.name.toLowerCase().includes(parser.toLowerCase())
       );
       if (customParser && compatibleParsers.includes(customParser)) {
@@ -120,35 +117,37 @@ export async function GET(request: NextRequest) {
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Access-Control-Allow-Origin': '*'
-        }
+          'Access-Control-Allow-Origin': '*',
+        },
       });
     } else {
       // 返回JSON格式的解析信息
-      return NextResponse.json({
-        success: true,
-        data: {
-          original_url: url,
-          platform,
-          parse_url: parseUrl,
-          parser_name: selectedParser.name,
-          available_parsers: compatibleParsers.map(p => p.name)
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            original_url: url,
+            platform,
+            parse_url: parseUrl,
+            parser_name: selectedParser.name,
+            available_parsers: compatibleParsers.map((p) => p.name),
+          },
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Cache-Control': 'public, max-age=300', // 5分钟缓存
+          },
         }
-      }, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'Cache-Control': 'public, max-age=300' // 5分钟缓存
-        }
-      });
+      );
     }
-
   } catch (error) {
     return NextResponse.json(
-      { 
+      {
         error: '视频解析失败',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
@@ -163,6 +162,6 @@ export async function OPTIONS() {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
-    }
+    },
   });
 }

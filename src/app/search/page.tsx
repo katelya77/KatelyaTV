@@ -3,7 +3,14 @@
 
 import { ChevronUp, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   addSearchHistory,
@@ -12,9 +19,11 @@ import {
   getSearchHistory,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { setTVFocus } from '@/lib/tv-utils';
 import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
+import { useTVModeOptional } from '@/components/tv/TVModeProvider';
 import VideoCard from '@/components/VideoCard';
 
 function SearchPageClient() {
@@ -28,6 +37,13 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+
+  // TV Mode support
+  const tvModeContext = useTVModeOptional();
+  const isTVMode = tvModeContext?.isTVMode ?? false;
+
+  // Ref for the search results container
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
 
   // 从 URL 参数获取搜索词
   const searchQuery = searchParams.get('q') || '';
@@ -201,6 +217,41 @@ function SearchPageClient() {
     }
   };
 
+  // Auto-focus on first result card in TV mode when results are displayed
+  // Requirement 6.5: Auto-focus on the first result card
+  const focusFirstResult = useCallback(() => {
+    if (!isTVMode || !showResults || searchResults.length === 0) return;
+
+    // Use requestAnimationFrame to ensure DOM is updated
+    requestAnimationFrame(() => {
+      // Find the first focusable video card in the results container
+      const container = resultsContainerRef.current;
+      if (container) {
+        const firstCard = container.querySelector<HTMLElement>(
+          '[data-tv-focusable="true"]'
+        );
+        if (firstCard) {
+          setTVFocus(firstCard, { scrollIntoView: true });
+        }
+      }
+    });
+  }, [isTVMode, showResults, searchResults.length]);
+
+  // Effect to auto-focus first result when results change in TV mode
+  useEffect(() => {
+    if (isTVMode && showResults && searchResults.length > 0 && !isLoading) {
+      // Small delay to ensure the DOM is fully rendered
+      const timer = setTimeout(focusFirstResult, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    isTVMode,
+    showResults,
+    searchResults.length,
+    isLoading,
+    focusFirstResult,
+  ]);
+
   // 返回顶部功能
   const scrollToTop = () => {
     try {
@@ -251,8 +302,11 @@ function SearchPageClient() {
                 </label>
               </div>
               <div
+                ref={resultsContainerRef}
                 key={`search-results-${viewMode}`}
-                className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
+                className={`justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8 ${
+                  isTVMode ? 'tv-search-results' : ''
+                }`}
               >
                 {viewMode === 'agg'
                   ? aggregatedResults.map(([mapKey, group]) => {
@@ -312,6 +366,9 @@ function SearchPageClient() {
                       clearSearchHistory(); // 事件监听会自动更新界面
                     }}
                     className='ml-3 text-sm text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-500'
+                    {...(isTVMode
+                      ? { tabIndex: 0, 'data-tv-focusable': 'true' }
+                      : {})}
                   >
                     清空
                   </button>
@@ -326,7 +383,12 @@ function SearchPageClient() {
                           `/search?q=${encodeURIComponent(item.trim())}`
                         );
                       }}
-                      className='px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300'
+                      className={`px-4 py-2 bg-gray-500/10 hover:bg-gray-300 rounded-full text-sm text-gray-700 transition-colors duration-200 dark:bg-gray-700/50 dark:hover:bg-gray-600 dark:text-gray-300 ${
+                        isTVMode ? 'tv-history-btn' : ''
+                      }`}
+                      {...(isTVMode
+                        ? { tabIndex: 0, 'data-tv-focusable': 'true' }
+                        : {})}
                     >
                       {item}
                     </button>
