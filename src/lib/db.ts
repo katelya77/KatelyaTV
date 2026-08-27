@@ -2,34 +2,22 @@
 
 import { AdminConfig } from './admin.types';
 import { D1Storage } from './d1.db';
-import { KvrocksStorage } from './kvrocks.db';
 import { LocalStorage } from './localstorage.db';
-import { RedisStorage } from './redis.db';
 import { Favorite, IStorage, PlayRecord } from './types';
-import { UpstashRedisStorage } from './upstash.db';
 
-// storage type 常量: 'localstorage' | 'redis' | 'kvrocks' | 'd1' | 'upstash'，默认 'localstorage'
+// storage type 常量: 'localstorage' | 'd1'，默认 'localstorage'
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
-    | 'redis'
-    | 'kvrocks'
     | 'd1'
-    | 'upstash'
     | undefined) || 'localstorage';
 
 // 创建存储实例
 function createStorage(): IStorage {
   const storageType = STORAGE_TYPE;
-  
+
   try {
     switch (storageType) {
-      case 'redis':
-        return new RedisStorage();
-      case 'kvrocks':
-        return new KvrocksStorage();
-      case 'upstash':
-        return new UpstashRedisStorage();
       case 'd1':
         // 对于 d1，先检查是否可用
         if (typeof globalThis !== 'undefined' && (globalThis as any).DB) {

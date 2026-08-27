@@ -10,9 +10,7 @@ export const runtime = 'edge';
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
-    | 'redis'
     | 'd1'
-    | 'upstash'
     | undefined) || 'localstorage';
 
 // 生成签名
@@ -123,7 +121,7 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    // 数据库 / redis 模式——校验用户名并尝试连接数据库
+    // 数据库模式——校验用户名并尝试连接数据库
     const { username, password } = await req.json();
 
     if (!username || typeof username !== 'string') {

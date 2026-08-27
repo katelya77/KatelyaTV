@@ -140,7 +140,7 @@ git commit -m "test: 添加播放记录 API 测试用例"
 - 操作系统：Windows 11 / macOS 14 / Ubuntu 22.04
 - 浏览器：Chrome 120 / Firefox 121 / Safari 17
 - 设备：桌面 / 移动端
-- 存储类型：localStorage / Redis / D1 / Upstash
+- 存储类型：localStorage / D1
 
 ## 截图/日志
 如果适用，请提供截图或错误日志
@@ -344,16 +344,6 @@ pnpm build
 
 # 启动生产服务器
 pnpm start
-```
-
-### Docker 测试
-
-```bash
-# 构建 Docker 镜像（镜像名示例）
-docker build -t katelyatv:test .
-
-# 运行容器
-docker run -d --name katelyatv-test -p 3000:3000 --env PASSWORD=test123 katelyatv:test
 ```
 
 ## 📞 获取帮助

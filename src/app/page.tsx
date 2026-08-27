@@ -492,23 +492,26 @@ function HomeClient() {
                 </PaginatedRow>
               </section>
 
-              {/* 热门综艺 */}
+              {/* 里番 */}
               <section className='mb-8'>
                 <div className='mb-4 flex items-center justify-between'>
                   <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-                    热门综艺
+                    里番
                   </h2>
-                  <Link
-                    href='/douban?type=show'
+                  {/* 将原来的 Link 替换为 a 标签，指向外部网站 */}
+                  <a
+                    href='https://moduzy1.com/list6-1/'
+                    target='_blank'
+                    rel='noopener noreferrer'
                     className='flex items-center text-sm text-gray-500 hover:text-purple-700 dark:text-gray-400 dark:hover:text-purple-300 transition-colors'
                   >
                     查看更多
                     <ChevronRight className='w-4 h-4 ml-1' />
-                  </Link>
+                  </a>
                 </div>
                 <PaginatedRow 
                   itemsPerPage={10}
-                  onLoadMore={loadMoreVarietyShows}
+                  onLoadMore={loadMoreVarietyShows} // 如果你不需要加载更多，可以把这里清空或替换
                   hasMoreData={hasMoreData.varietyShows}
                   isLoading={loadingMore.varietyShows}
                 >

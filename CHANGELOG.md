@@ -78,7 +78,7 @@
   - 支持手动设置片头、片尾跳过时间段
   - 播放时自动显示跳过按钮，8秒后自动隐藏
   - 每个用户可独立配置，支持跨设备同步
-  - 完全兼容所有存储后端（LocalStorage、Redis、D1、Upstash）
+  - 完全兼容所有存储后端（LocalStorage、D1）
 
 ### 🔧 技术改进
 - 新增 `SkipController` 组件，提供完整的跳过功能界面
@@ -89,20 +89,14 @@
 
 ### 🌐 部署兼容性
 - ✅ **Cloudflare Pages** - Edge Runtime 完全兼容
-- ✅ **Docker 部署** - 自动 Runtime 转换，完全兼容
-- ✅ **Vercel 部署** - 自动适配，完全兼容
-- ✅ **传统服务器** - Node.js Runtime，完全兼容
-- ✅ **其他云平台** - 全面支持各种部署环境
 
 ### 📚 文档更新
 - 更新 README.md，添加跳过功能介绍和使用教程
-- 新增 DEPLOYMENT_COMPATIBILITY.md 部署兼容性说明
 - 添加功能特性详细描述
 - 完善环境变量和配置说明
 
 ### 🧪 测试验证
-- 新增 `test-docker-compatibility.js` 兼容性测试脚本
-- 验证所有 22 个 API 路由的 Edge Runtime 配置
+- 验证所有 API 路由的 Edge Runtime 配置
 - 确认所有存储后端的跳过配置功能支持
 
 ---
@@ -115,8 +109,7 @@
 - ⭐ 收藏功能
 - 📖 播放历史记录
 - 👥 多用户支持
-- 🐳 Docker 一键部署
-- ☁️ 多平台部署支持
+- ☁️ Cloudflare Pages 部署
 - 🌓 深色模式
 - 📱 PWA 支持
 

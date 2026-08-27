@@ -96,9 +96,7 @@ const STORAGE_TYPE = (() => {
       (window as any).RUNTIME_CONFIG?.STORAGE_TYPE) ||
     (process.env.STORAGE_TYPE as
       | 'localstorage'
-      | 'redis'
       | 'd1'
-      | 'upstash'
       | undefined) ||
     'localstorage';
   return raw;
@@ -438,7 +436,7 @@ export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
     return {};
   }
 
-  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
+  // 数据库存储模式：使用混合缓存策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 优先从缓存获取数据
     const cachedData = cacheManager.getCachedPlayRecords();
@@ -502,7 +500,7 @@ export async function savePlayRecord(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
@@ -567,7 +565,7 @@ export async function deletePlayRecord(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedRecords = cacheManager.getCachedPlayRecords() || {};
@@ -630,7 +628,7 @@ export async function getSearchHistory(): Promise<string[]> {
     return [];
   }
 
-  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
+  // 数据库存储模式：使用混合缓存策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 优先从缓存获取数据
     const cachedData = cacheManager.getCachedSearchHistory();
@@ -691,7 +689,7 @@ export async function addSearchHistory(keyword: string): Promise<void> {
   const trimmed = keyword.trim();
   if (!trimmed) return;
 
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedHistory = cacheManager.getCachedSearchHistory() || [];
@@ -751,7 +749,7 @@ export async function addSearchHistory(keyword: string): Promise<void> {
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearSearchHistory(): Promise<void> {
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cacheSearchHistory([]);
@@ -793,7 +791,7 @@ export async function deleteSearchHistory(keyword: string): Promise<void> {
   const trimmed = keyword.trim();
   if (!trimmed) return;
 
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedHistory = cacheManager.getCachedSearchHistory() || [];
@@ -851,7 +849,7 @@ export async function getAllFavorites(): Promise<Record<string, Favorite>> {
     return {};
   }
 
-  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
+  // 数据库存储模式：使用混合缓存策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 优先从缓存获取数据
     const cachedData = cacheManager.getCachedFavorites();
@@ -915,7 +913,7 @@ export async function saveFavorite(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedFavorites = cacheManager.getCachedFavorites() || {};
@@ -977,7 +975,7 @@ export async function deleteFavorite(
 ): Promise<void> {
   const key = generateStorageKey(source, id);
 
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     const cachedFavorites = cacheManager.getCachedFavorites() || {};
@@ -1035,7 +1033,7 @@ export async function isFavorited(
 ): Promise<boolean> {
   const key = generateStorageKey(source, id);
 
-  // 数据库存储模式：使用混合缓存策略（包括 redis、d1、upstash）
+  // 数据库存储模式：使用混合缓存策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     const cachedFavorites = cacheManager.getCachedFavorites();
 
@@ -1084,7 +1082,7 @@ export async function isFavorited(
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearAllPlayRecords(): Promise<void> {
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cachePlayRecords({});
@@ -1126,7 +1124,7 @@ export async function clearAllPlayRecords(): Promise<void> {
  * 数据库存储模式下使用乐观更新：先更新缓存，再异步同步到数据库。
  */
 export async function clearAllFavorites(): Promise<void> {
-  // 数据库存储模式：乐观更新策略（包括 redis、d1、upstash）
+  // 数据库存储模式：乐观更新策略（d1）
   if (STORAGE_TYPE !== 'localstorage') {
     // 立即更新缓存
     cacheManager.cacheFavorites({});
@@ -1272,7 +1270,7 @@ export function subscribeToDataUpdates<T>(
   callback: (data: T) => void
 ): () => void {
   if (typeof window === 'undefined') {
-    return () => {};
+    return () => { };
   }
 
   const handleUpdate = (event: CustomEvent) => {

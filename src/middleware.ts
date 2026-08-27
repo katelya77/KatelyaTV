@@ -12,6 +12,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Emby 兼容层自行处理认证，直接放行
+  if (pathname === '/emby' || pathname.startsWith('/emby/')) {
+    return NextResponse.next();
+  }
+
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 
   if (!process.env.AUTH_PASSWORD) {

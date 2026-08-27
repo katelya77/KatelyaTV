@@ -14,12 +14,11 @@ const inter = Inter({ subsets: ['latin'] });
 // 动态生成 metadata，支持配置更新后的标题变化
 export async function generateMetadata(): Promise<Metadata> {
   let siteName = process.env.SITE_NAME || 'KatelyaTV';
-  
+
   try {
-    // 只有在非 d1 和 upstash 存储类型时才尝试获取配置
+    // 只有在非 d1 存储类型时才尝试获取配置
     if (
-      process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1' &&
-      process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'upstash'
+      process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1'
     ) {
       const config = await getConfig();
       siteName = config.SiteConfig.SiteName;
@@ -65,8 +64,7 @@ export default async function RootLayout({
   let imageProxy = process.env.NEXT_PUBLIC_IMAGE_PROXY || '';
   let doubanProxy = process.env.NEXT_PUBLIC_DOUBAN_PROXY || '';
   if (
-    process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1' &&
-    process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'upstash'
+    process.env.NEXT_PUBLIC_STORAGE_TYPE !== 'd1'
   ) {
     const config = await getConfig();
     siteName = config.SiteConfig.SiteName;
