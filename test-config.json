@@ -1,0 +1,14 @@
+{
+  "cache_time": 7200,
+  "api_site": {
+    "test_source": {
+      "api": "https://test.example.com/api.php/provide/vod",
+      "name": "测试视频源",
+      "detail": "https://test.example.com"
+    },
+    "another_test": {
+      "api": "https://another.example.com/api.php/provide/vod", 
+      "name": "另一个测试源"
+    }
+  }
+}

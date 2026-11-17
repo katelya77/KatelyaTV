@@ -59,11 +59,12 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'add': {
-        const { key, name, api, detail } = body as {
+        const { key, name, api, detail, is_adult } = body as {
           key?: string;
           name?: string;
           api?: string;
           detail?: string;
+          is_adult?: boolean;
         };
         if (!key || !name || !api) {
           return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
           detail,
           from: 'custom',
           disabled: false,
+          is_adult: is_adult || false, // 确保处理 is_adult 字段
         });
         break;
       }

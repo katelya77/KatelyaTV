@@ -2,7 +2,7 @@
 
 'use client';
 
-import { KeyRound, LogOut, Settings, Shield, User, X } from 'lucide-react';
+import { Filter, KeyRound, LogOut, Settings, Shield, User, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -208,12 +208,18 @@ export const UserMenu: React.FC = () => {
     }
   };
 
+  // 处理设置点击
   const handleSettings = () => {
     setIsOpen(false);
     setIsSettingsOpen(true);
   };
 
-  const handleCloseSettings = () => {
+  // 处理内容过滤设置
+  const handleContentFilter = () => {
+    setIsOpen(false);
+    // 跳转到内容过滤设置页面
+    router.push('/settings');
+  };  const handleCloseSettings = () => {
     setIsSettingsOpen(false);
   };
 
@@ -360,7 +366,16 @@ export const UserMenu: React.FC = () => {
             className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
           >
             <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
-            <span className='font-medium'>设置</span>
+            <span className='font-medium'>本地设置</span>
+          </button>
+
+          {/* 内容过滤按钮 */}
+          <button
+            onClick={handleContentFilter}
+            className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
+          >
+            <Filter className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+            <span className='font-medium'>内容过滤</span>
           </button>
 
           {/* 管理面板按钮 */}

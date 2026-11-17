@@ -16,9 +16,12 @@ concurrency:
   cancel-in-progress: true
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME: katelya77/katelyatv
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ github.repository }}
     permissions:
       contents: read
       packages: write
@@ -30,11 +33,13 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
+          - linux/arm/v7
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Set image name to lowercase
-        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        id: image_name
+        run: echo "name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -51,7 +56,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -62,8 +67,6 @@ jobs:
             org.opencontainers.image.description=katelyatv - A modern streaming platform
             org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
-            org.opencontainers.image.created=${{ steps.meta.outputs.created }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=MIT
       - name: Build Docker image
@@ -77,7 +80,7 @@ jobs:
           cache-from: type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ github.ref_name }}-${{ matrix.platform }}
           outputs: |
-            type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+            type=image,name=${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
       - name: Export digest
@@ -104,9 +107,12 @@ jobs:
     needs:
       - build-and-push
     if: github.event_name != 'pull_request'
+    env:
+      REGISTRY: ghcr.io
     steps:
       - name: Set image name to lowercase
-        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+        id: image_name
+        run: echo "name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
       - name: Download digests
         uses: actions/download-artifact@v4
         with:
@@ -125,7 +131,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}-
@@ -134,28 +140,28 @@ jobs:
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+            $(printf '${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}@sha256:%s ' *)
       - name: Get multi-arch digest
         id: get_digest
         run: |
           # 直接从 docker pull 获取 digest，这是最可靠的方法
-          digest=$(docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} 2>&1 | grep "Digest:" | cut -d' ' -f2 || echo "")
+          digest=$(docker pull ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}:${{ steps.meta.outputs.version }} 2>&1 | grep "Digest:" | cut -d' ' -f2 || echo "")
           if [ -z "$digest" ]; then
             # 备选方案：使用 crane 风格的检查（如果支持的话）
-            digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} | grep "Digest:" | head -1 | cut -d' ' -f2 || echo "")
+            digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}:${{ steps.meta.outputs.version }} | grep "Digest:" | head -1 | cut -d' ' -f2 || echo "")
           fi
           if [ -z "$digest" ]; then
             # 最后备选：从 raw manifest 计算
-            digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} --raw | sha256sum | awk '{print "sha256:"$1}')
+            digest=$(docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}:${{ steps.meta.outputs.version }} --raw | sha256sum | awk '{print "sha256:"$1}')
           fi
           echo "digest=$digest" >> $GITHUB_OUTPUT
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name }}:${{ steps.meta.outputs.version }}
       - name: Generate artifact attestation
         if: github.event_name != 'pull_request'
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-name: ${{ env.REGISTRY }}/${{ steps.image_name.outputs.name}}
           subject-digest: ${{ steps.get_digest.outputs.digest }}
           push-to-registry: true

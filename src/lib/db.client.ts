@@ -41,6 +41,24 @@ export interface Favorite {
   search_title?: string;
 }
 
+// ---- 片头片尾跳过配置类型 ----
+export interface SkipSegment {
+  start: number; // 开始时间（秒）
+  end: number; // 结束时间（秒）
+  type: 'opening' | 'ending'; // 片头或片尾
+  title?: string; // 可选的描述
+  autoSkip?: boolean; // 是否自动跳过（默认true）
+  autoNextEpisode?: boolean; // 片尾是否自动跳转下一集（默认true，仅对ending类型有效）
+}
+
+export interface EpisodeSkipConfig {
+  source: string; // 资源站标识
+  id: string; // 剧集ID
+  title: string; // 剧集标题
+  segments: SkipSegment[]; // 跳过片段列表
+  updated_time: number; // 最后更新时间
+}
+
 // ---- 缓存数据结构 ----
 interface CacheData<T> {
   data: T;
@@ -52,6 +70,7 @@ interface UserCacheStore {
   playRecords?: CacheData<Record<string, PlayRecord>>;
   favorites?: CacheData<Record<string, Favorite>>;
   searchHistory?: CacheData<string[]>;
+  skipConfigs?: CacheData<Record<string, EpisodeSkipConfig>>;
 }
 
 // ---- 常量 ----
@@ -59,13 +78,14 @@ interface UserCacheStore {
 const PLAY_RECORDS_KEY = 'katelyatv_play_records';
 const FAVORITES_KEY = 'katelyatv_favorites';
 const SEARCH_HISTORY_KEY = 'katelyatv_search_history';
+const SKIP_CONFIGS_KEY = 'katelyatv_skip_configs';
 const LEGACY_PLAY_RECORDS_KEY = 'moontv_play_records';
 const LEGACY_FAVORITES_KEY = 'moontv_favorites';
 const LEGACY_SEARCH_HISTORY_KEY = 'moontv_search_history';
 
 // 缓存相关常量
 const CACHE_PREFIX = 'katelyatv_cache_';
-const LEGACY_CACHE_PREFIX = 'moontv_cache_';
+const _LEGACY_CACHE_PREFIX = 'moontv_cache_'; // 保留用于将来的迁移功能
 const CACHE_VERSION = '1.0.0';
 const CACHE_EXPIRE_TIME = 60 * 60 * 1000; // 一小时缓存过期
 
@@ -250,6 +270,35 @@ class HybridCacheManager {
 
     const userCache = this.getUserCache(username);
     userCache.searchHistory = this.createCacheData(data);
+    this.saveUserCache(username, userCache);
+  }
+
+  /**
+   * 获取缓存的跳过配置
+   */
+  getCachedSkipConfigs(): Record<string, EpisodeSkipConfig> | null {
+    const username = this.getCurrentUsername();
+    if (!username) return null;
+
+    const userCache = this.getUserCache(username);
+    const cached = userCache.skipConfigs;
+
+    if (cached && this.isCacheValid(cached)) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  /**
+   * 缓存跳过配置
+   */
+  cacheSkipConfigs(data: Record<string, EpisodeSkipConfig>): void {
+    const username = this.getCurrentUsername();
+    if (!username) return;
+
+    const userCache = this.getUserCache(username);
+    userCache.skipConfigs = this.createCacheData(data);
     this.saveUserCache(username, userCache);
   }
 
@@ -1254,4 +1303,245 @@ export async function preloadUserData(): Promise<void> {
   refreshAllCache().catch((err) => {
     console.warn('预加载用户数据失败:', err);
   });
+}
+
+// ---------------- 片头片尾跳过配置管理 ----------------
+
+/**
+ * 生成跳过配置的存储 key
+ */
+export function generateSkipConfigKey(source: string, id: string): string {
+  return `${source}_${id}`;
+}
+
+/**
+ * 获取单个跳过配置
+ */
+export async function getSkipConfig(
+  source: string,
+  id: string
+): Promise<EpisodeSkipConfig | null> {
+  try {
+    const key = generateSkipConfigKey(source, id);
+
+    if (STORAGE_TYPE === 'localstorage') {
+      // localStorage 模式
+      const allConfigs = JSON.parse(
+        localStorage.getItem(SKIP_CONFIGS_KEY) || '{}'
+      );
+      return allConfigs[key] || null;
+    } else {
+      // 数据库模式：先查缓存
+      const cacheManager = HybridCacheManager.getInstance();
+      const cachedConfigs = cacheManager.getCachedSkipConfigs();
+
+      if (cachedConfigs && cachedConfigs[key]) {
+        return cachedConfigs[key];
+      }
+
+      // 缓存未命中，从服务器获取
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (!authInfo?.username) {
+        return null;
+      }
+
+      const response = await fetch('/api/skip-configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'get',
+          key,
+          username: authInfo.username,
+          signature: authInfo.signature,
+          timestamp: authInfo.timestamp,
+        }),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      const config = data.config;
+
+      // 更新缓存
+      if (config) {
+        const allConfigs = cachedConfigs || {};
+        allConfigs[key] = config;
+        cacheManager.cacheSkipConfigs(allConfigs);
+      }
+
+      return config;
+    }
+  } catch (err) {
+    console.error('获取跳过配置失败:', err);
+    return null;
+  }
+}
+
+/**
+ * 保存跳过配置
+ */
+export async function saveSkipConfig(
+  source: string,
+  id: string,
+  config: EpisodeSkipConfig
+): Promise<void> {
+  try {
+    const key = generateSkipConfigKey(source, id);
+
+    if (STORAGE_TYPE === 'localstorage') {
+      // localStorage 模式
+      const allConfigs = JSON.parse(
+        localStorage.getItem(SKIP_CONFIGS_KEY) || '{}'
+      );
+      allConfigs[key] = config;
+      localStorage.setItem(SKIP_CONFIGS_KEY, JSON.stringify(allConfigs));
+    } else {
+      // 数据库模式
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (!authInfo?.username) {
+        throw new Error('用户未登录');
+      }
+
+      const response = await fetch('/api/skip-configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'set',
+          key,
+          config,
+          username: authInfo.username,
+          signature: authInfo.signature,
+          timestamp: authInfo.timestamp,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('保存跳过配置失败');
+      }
+
+      // 更新缓存
+      const cacheManager = HybridCacheManager.getInstance();
+      const cachedConfigs = cacheManager.getCachedSkipConfigs() || {};
+      cachedConfigs[key] = config;
+      cacheManager.cacheSkipConfigs(cachedConfigs);
+    }
+
+    console.log('跳过配置已保存:', key);
+  } catch (err) {
+    console.error('保存跳过配置失败:', err);
+    throw err;
+  }
+}
+
+/**
+ * 获取所有跳过配置
+ */
+export async function getAllSkipConfigs(): Promise<Record<string, EpisodeSkipConfig>> {
+  try {
+    if (STORAGE_TYPE === 'localstorage') {
+      // localStorage 模式
+      return JSON.parse(localStorage.getItem(SKIP_CONFIGS_KEY) || '{}');
+    } else {
+      // 数据库模式：先查缓存
+      const cacheManager = HybridCacheManager.getInstance();
+      const cachedConfigs = cacheManager.getCachedSkipConfigs();
+
+      if (cachedConfigs) {
+        return cachedConfigs;
+      }
+
+      // 缓存未命中，从服务器获取
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (!authInfo?.username) {
+        return {};
+      }
+
+      const response = await fetch('/api/skip-configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'getAll',
+          username: authInfo.username,
+          signature: authInfo.signature,
+          timestamp: authInfo.timestamp,
+        }),
+      });
+
+      if (!response.ok) {
+        return {};
+      }
+
+      const data = await response.json();
+      const configs = data.configs || {};
+
+      // 更新缓存
+      cacheManager.cacheSkipConfigs(configs);
+
+      return configs;
+    }
+  } catch (err) {
+    console.error('获取所有跳过配置失败:', err);
+    return {};
+  }
+}
+
+/**
+ * 删除跳过配置
+ */
+export async function deleteSkipConfig(source: string, id: string): Promise<void> {
+  try {
+    const key = generateSkipConfigKey(source, id);
+
+    if (STORAGE_TYPE === 'localstorage') {
+      // localStorage 模式
+      const allConfigs = JSON.parse(
+        localStorage.getItem(SKIP_CONFIGS_KEY) || '{}'
+      );
+      delete allConfigs[key];
+      localStorage.setItem(SKIP_CONFIGS_KEY, JSON.stringify(allConfigs));
+    } else {
+      // 数据库模式
+      const authInfo = getAuthInfoFromBrowserCookie();
+      if (!authInfo?.username) {
+        throw new Error('用户未登录');
+      }
+
+      const response = await fetch('/api/skip-configs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          key,
+          username: authInfo.username,
+          signature: authInfo.signature,
+          timestamp: authInfo.timestamp,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('删除跳过配置失败');
+      }
+
+      // 更新缓存
+      const cacheManager = HybridCacheManager.getInstance();
+      const cachedConfigs = cacheManager.getCachedSkipConfigs() || {};
+      delete cachedConfigs[key];
+      cacheManager.cacheSkipConfigs(cachedConfigs);
+    }
+
+    console.log('跳过配置已删除:', key);
+  } catch (err) {
+    console.error('删除跳过配置失败:', err);
+    throw err;
+  }
 }

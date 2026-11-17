@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps, no-console */
+/* eslint-disable react-hooks/exhaustive-deps */
 
 'use client';
 
@@ -8,6 +8,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 // 客户端收藏 API
 import {
+  type Favorite,
   clearAllFavorites,
   getAllFavorites,
   getAllPlayRecords,
@@ -19,7 +20,7 @@ import { DoubanItem } from '@/lib/types';
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
 import PageLayout from '@/components/PageLayout';
-import ScrollableRow from '@/components/ScrollableRow';
+import PaginatedRow from '@/components/PaginatedRow';
 import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
 
@@ -81,6 +82,21 @@ function HomeClient() {
   const [loading, setLoading] = useState(true);
   const { announcement } = useSite();
 
+  // 分页状态管理
+  const [moviePage, setMoviePage] = useState(0);
+  const [tvShowPage, setTvShowPage] = useState(0);
+  const [varietyShowPage, setVarietyShowPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState({
+    movies: false,
+    tvShows: false,
+    varietyShows: false,
+  });
+  const [hasMoreData, setHasMoreData] = useState({
+    movies: true,
+    tvShows: true,
+    varietyShows: true,
+  });
+
   const [showAnnouncement, setShowAnnouncement] = useState(false);
 
   // 检查公告弹窗状态
@@ -137,7 +153,8 @@ function HomeClient() {
           setHotVarietyShows(varietyShowsData.list);
         }
       } catch (error) {
-        console.error('获取豆瓣数据失败:', error);
+        // 静默处理错误，避免控制台警告
+        // console.error('获取豆瓣数据失败:', error);
       } finally {
         setLoading(false);
       }
@@ -146,8 +163,102 @@ function HomeClient() {
     fetchDoubanData();
   }, []);
 
+  // 加载更多电影
+  const loadMoreMovies = async () => {
+    if (loadingMore.movies || !hasMoreData.movies) return;
+
+    setLoadingMore(prev => ({ ...prev, movies: true }));
+    try {
+      const nextPage = moviePage + 1;
+      const moviesData = await getDoubanCategories({
+        kind: 'movie',
+        category: '热门',
+        type: '全部',
+        pageStart: nextPage * 20,
+        pageLimit: 20,
+      });
+
+      if (moviesData.code === 200 && moviesData.list.length > 0) {
+        setHotMovies(prev => [...prev, ...moviesData.list]);
+        setMoviePage(nextPage);
+        // 如果返回的数据少于请求的数量，说明没有更多数据了
+        if (moviesData.list.length < 20) {
+          setHasMoreData(prev => ({ ...prev, movies: false }));
+        }
+      } else {
+        setHasMoreData(prev => ({ ...prev, movies: false }));
+      }
+    } catch (error) {
+      // 静默处理错误
+    } finally {
+      setLoadingMore(prev => ({ ...prev, movies: false }));
+    }
+  };
+
+  // 加载更多剧集
+  const loadMoreTvShows = async () => {
+    if (loadingMore.tvShows || !hasMoreData.tvShows) return;
+
+    setLoadingMore(prev => ({ ...prev, tvShows: true }));
+    try {
+      const nextPage = tvShowPage + 1;
+      const tvShowsData = await getDoubanCategories({
+        kind: 'tv',
+        category: 'tv',
+        type: 'tv',
+        pageStart: nextPage * 20,
+        pageLimit: 20,
+      });
+
+      if (tvShowsData.code === 200 && tvShowsData.list.length > 0) {
+        setHotTvShows(prev => [...prev, ...tvShowsData.list]);
+        setTvShowPage(nextPage);
+        if (tvShowsData.list.length < 20) {
+          setHasMoreData(prev => ({ ...prev, tvShows: false }));
+        }
+      } else {
+        setHasMoreData(prev => ({ ...prev, tvShows: false }));
+      }
+    } catch (error) {
+      // 静默处理错误
+    } finally {
+      setLoadingMore(prev => ({ ...prev, tvShows: false }));
+    }
+  };
+
+  // 加载更多综艺
+  const loadMoreVarietyShows = async () => {
+    if (loadingMore.varietyShows || !hasMoreData.varietyShows) return;
+
+    setLoadingMore(prev => ({ ...prev, varietyShows: true }));
+    try {
+      const nextPage = varietyShowPage + 1;
+      const varietyShowsData = await getDoubanCategories({
+        kind: 'tv',
+        category: 'show',
+        type: 'show',
+        pageStart: nextPage * 20,
+        pageLimit: 20,
+      });
+
+      if (varietyShowsData.code === 200 && varietyShowsData.list.length > 0) {
+        setHotVarietyShows(prev => [...prev, ...varietyShowsData.list]);
+        setVarietyShowPage(nextPage);
+        if (varietyShowsData.list.length < 20) {
+          setHasMoreData(prev => ({ ...prev, varietyShows: false }));
+        }
+      } else {
+        setHasMoreData(prev => ({ ...prev, varietyShows: false }));
+      }
+    } catch (error) {
+      // 静默处理错误
+    } finally {
+      setLoadingMore(prev => ({ ...prev, varietyShows: false }));
+    }
+  };
+
   // 处理收藏数据更新的函数
-  const updateFavoriteItems = async (allFavorites: Record<string, any>) => {
+  const updateFavoriteItems = async (allFavorites: Record<string, Favorite>) => {
     const allPlayRecords = await getAllPlayRecords();
 
     // 根据保存时间排序（从近到远）
@@ -191,7 +302,7 @@ function HomeClient() {
     // 监听收藏更新事件
     const unsubscribe = subscribeToDataUpdates(
       'favoritesUpdated',
-      (newFavorites: Record<string, any>) => {
+      (newFavorites: Record<string, Favorite>) => {
         updateFavoriteItems(newFavorites);
       }
     );
@@ -290,13 +401,18 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <PaginatedRow 
+                  itemsPerPage={10}
+                  onLoadMore={loadMoreMovies}
+                  hasMoreData={hasMoreData.movies}
+                  isLoading={loadingMore.movies}
+                >
                   {loading
-                    ? // 加载状态显示灰色占位数据
-                      Array.from({ length: 8 }).map((_, index) => (
+                    ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
+                      Array.from({ length: 10 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
                             <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
@@ -308,7 +424,7 @@ function HomeClient() {
                       hotMovies.map((movie, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <VideoCard
                             from='douban'
@@ -321,7 +437,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </ScrollableRow>
+                </PaginatedRow>
               </section>
 
               {/* 热门剧集 */}
@@ -338,13 +454,18 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <PaginatedRow 
+                  itemsPerPage={10}
+                  onLoadMore={loadMoreTvShows}
+                  hasMoreData={hasMoreData.tvShows}
+                  isLoading={loadingMore.tvShows}
+                >
                   {loading
-                    ? // 加载状态显示灰色占位数据
-                      Array.from({ length: 8 }).map((_, index) => (
+                    ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
+                      Array.from({ length: 10 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
                             <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
@@ -356,7 +477,7 @@ function HomeClient() {
                       hotTvShows.map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <VideoCard
                             from='douban'
@@ -368,7 +489,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </ScrollableRow>
+                </PaginatedRow>
               </section>
 
               {/* 热门综艺 */}
@@ -385,13 +506,18 @@ function HomeClient() {
                     <ChevronRight className='w-4 h-4 ml-1' />
                   </Link>
                 </div>
-                <ScrollableRow>
+                <PaginatedRow 
+                  itemsPerPage={10}
+                  onLoadMore={loadMoreVarietyShows}
+                  hasMoreData={hasMoreData.varietyShows}
+                  isLoading={loadingMore.varietyShows}
+                >
                   {loading
-                    ? // 加载状态显示灰色占位数据
-                      Array.from({ length: 8 }).map((_, index) => (
+                    ? // 加载状态显示灰色占位数据 (显示10个，2行x5列)
+                      Array.from({ length: 10 }).map((_, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <div className='relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-purple-200 animate-pulse dark:bg-purple-800'>
                             <div className='absolute inset-0 bg-purple-300 dark:bg-purple-700'></div>
@@ -403,7 +529,7 @@ function HomeClient() {
                       hotVarietyShows.map((show, index) => (
                         <div
                           key={index}
-                          className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
+                          className='w-full'
                         >
                           <VideoCard
                             from='douban'
@@ -415,7 +541,7 @@ function HomeClient() {
                           />
                         </div>
                       ))}
-                </ScrollableRow>
+                </PaginatedRow>
               </section>
 
               {/* 首页底部 Logo */}

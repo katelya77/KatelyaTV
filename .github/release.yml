@@ -9,41 +9,41 @@ tag-template: 'v$RESOLVED_VERSION'
 # 发布说明模板
 body-template: |
   ## 🎉 新版本发布
-  
+
   **版本号**: $RESOLVED_VERSION
   **发布日期**: $RELEASE_DATE
-  
+
   ### ✨ 新功能
   $CHANGES
-  
+
   ### 🐛 修复
   $FIXES
-  
+
   ### 🔧 改进
   $IMPROVEMENTS
-  
+
   ### 📝 文档更新
   $DOCS
-  
+
   ### 🚀 部署说明
-  
+
   #### Docker 部署
   ```bash
-  docker pull ghcr.io/senshinya/moontv:v$RESOLVED_VERSION
-  docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:v$RESOLVED_VERSION
+  docker pull ghcr.io/katelya77/katelyatv:v$RESOLVED_VERSION
+  docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:v$RESOLVED_VERSION
   ```
-  
+
   #### 环境变量更新
   请查看 [README.md](README.md) 了解最新的环境变量配置。
-  
+
   ### 📋 完整更新日志
   查看 [CHANGELOG.md](CHANGELOG.md) 了解详细的更新历史。
-  
+
   ### 🔗 相关链接
-  - [项目主页](https://github.com/senshinya/moontv)
-  - [在线演示](https://moontv.vercel.app)
-  - [问题反馈](https://github.com/senshinya/moontv/issues)
-  - [功能建议](https://github.com/senshinya/moontv/discussions)
+  - [项目主页](https://github.com/katelya77/KatelyaTV)
+  - [在线演示](https://katelyatv.vercel.app)
+  - [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
+  - [功能建议](https://github.com/katelya77/KatelyaTV/discussions)
 
 # 发布配置
 prerelease: false
@@ -96,63 +96,63 @@ categories:
 # 模板配置
 template: |
   ## 🎯 发布概述
-  
+
   本次发布包含以下主要更新：
-  
+
   ### ✨ 新功能
   - 新增观看历史记录功能，支持断点续播
   - 集成豆瓣热门推荐系统
   - 支持 PWA 安装和离线缓存
   - 新增多用户权限管理系统
-  
+
   ### 🐛 问题修复
   - 修复播放进度记录丢失问题
   - 优化视频播放器兼容性
   - 修复移动端响应式布局问题
-  
+
   ### 🔧 性能优化
   - 优化搜索接口响应速度
   - 改进缓存策略，减少重复请求
   - 优化数据库查询性能
-  
+
   ### 📱 用户体验
   - 新增深色模式支持
   - 优化移动端操作体验
   - 改进错误提示和加载状态
-  
+
   ## 🚀 快速开始
-  
+
   1. **Docker 部署**（推荐）
      ```bash
-     docker pull ghcr.io/senshinya/moontv:v$RESOLVED_VERSION
-     docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:v$RESOLVED_VERSION
+     docker pull ghcr.io/katelya77/katelyatv:v$RESOLVED_VERSION
+     docker run -d --name katelyatv -p 3000:3000 --env PASSWORD=your_password ghcr.io/katelya77/katelyatv:v$RESOLVED_VERSION
      ```
-  
+
   2. **Vercel 部署**
      - Fork 本仓库
      - 在 Vercel 中导入项目
      - 设置环境变量 PASSWORD
      - 自动部署完成
-  
+
   3. **Cloudflare Pages 部署**
      - Fork 本仓库
      - 在 Cloudflare Pages 中导入项目
      - 设置构建命令：`pnpm run pages:build`
      - 配置环境变量
-  
+
   ## 📋 环境变量
-  
+
   | 变量 | 说明 | 默认值 |
   |------|------|--------|
   | PASSWORD | 访问密码 | 必填 |
   | NEXT_PUBLIC_STORAGE_TYPE | 存储类型 | localstorage |
   | USERNAME | 管理员账号 | 空 |
-  
+
   更多环境变量请查看 [README.md](README.md)
-  
+
   ## 🔗 相关资源
-  
-  - [项目文档](https://github.com/senshinya/moontv#readme)
-  - [问题反馈](https://github.com/senshinya/moontv/issues)
-  - [功能讨论](https://github.com/senshinya/moontv/discussions)
-  - [贡献指南](https://github.com/senshinya/moontv/blob/main/CONTRIBUTING.md)
+
+  - [项目文档](https://github.com/katelya77/KatelyaTV#readme)
+  - [问题反馈](https://github.com/katelya77/KatelyaTV/issues)
+  - [功能讨论](https://github.com/katelya77/KatelyaTV/discussions)
+  - [贡献指南](https://github.com/katelya77/KatelyaTV/blob/main/CONTRIBUTING.md)

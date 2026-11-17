@@ -2,7 +2,7 @@
 
 'use client';
 
-const CURRENT_VERSION = '20250831153112';
+const CURRENT_VERSION = '20250904200125';
 
 // 版本检查结果枚举
 export enum UpdateStatus {
@@ -11,14 +11,14 @@ export enum UpdateStatus {
   FETCH_FAILED = 'fetch_failed', // 获取失败
 }
 
-// 远程版本检查URL配置（支持环境变量覆盖，并保留 MoonTV 上游作为后备）
+// 远程版本检查URL配置（支持环境变量覆盖）
 const ENV_PRIMARY = process.env.NEXT_PUBLIC_VERSION_URL_PRIMARY;
 const ENV_BACKUP = process.env.NEXT_PUBLIC_VERSION_URL_BACKUP;
 const VERSION_CHECK_URLS = [
   ENV_PRIMARY,
   ENV_BACKUP,
-  'https://ghfast.top/raw.githubusercontent.com/senshinya/MoonTV/main/VERSION.txt',
-  'https://raw.githubusercontent.com/senshinya/MoonTV/main/VERSION.txt',
+  'https://ghfast.top/raw.githubusercontent.com/katelya77/KatelyaTV/main/VERSION.txt',
+  'https://raw.githubusercontent.com/katelya77/KatelyaTV/main/VERSION.txt',
 ].filter(Boolean) as string[];
 
 /**

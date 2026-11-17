@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
 
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 
-  if (!process.env.PASSWORD) {
+  if (!process.env.AUTH_PASSWORD) {
     // 如果没有设置密码，重定向到警告页面
     const warningUrl = new URL('/warning', request.url);
     return NextResponse.redirect(warningUrl);
@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
 
   // localstorage模式：在middleware中完成验证
   if (storageType === 'localstorage') {
-    if (!authInfo.password || authInfo.password !== process.env.PASSWORD) {
+    if (!authInfo.password || authInfo.password !== process.env.AUTH_PASSWORD) {
       return handleAuthFailure(request, pathname);
     }
     return NextResponse.next();
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     const isValidSignature = await verifySignature(
       authInfo.username,
       authInfo.signature,
-      process.env.PASSWORD || ''
+      process.env.AUTH_PASSWORD || ''
     );
 
     // 签名验证通过即可
@@ -133,6 +133,6 @@ function shouldSkipAuth(pathname: string): boolean {
 // 配置middleware匹配规则
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|login|warning|api/login|api/register|api/logout|api/cron|api/server-config).*)',
+    '/((?!_next/static|_next/image|favicon.ico|login|warning|api/login|api/register|api/logout|api/cron|api/server-config|api/search|api/detail|api/image-proxy|api/tvbox).*)',
   ],
 };

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # KatelyaTV 应用服务（本地构建版本）
+  katelyatv:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # 数据库配置 - 使用 Kvrocks
+      NEXT_PUBLIC_STORAGE_TYPE: kvrocks
+      KVROCKS_URL: redis://kvrocks:6666
+      KVROCKS_PASSWORD: ${KVROCKS_PASSWORD:-}
+      KVROCKS_DATABASE: 0
+      
+      # 其他必要的环境变量
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+    depends_on:
+      - kvrocks
+    restart: unless-stopped
+    networks:
+      - katelyatv-network
+
+  # Kvrocks 数据库服务
+  kvrocks:
+    image: apache/kvrocks:latest
+    ports:
+      - "6666:6666"
+    environment:
+      # Kvrocks 配置
+      KVROCKS_BIND: 0.0.0.0
+      KVROCKS_PORT: 6666
+      KVROCKS_DIR: /var/lib/kvrocks/data
+      KVROCKS_LOG_LEVEL: info
+      # 可选：设置密码
+      KVROCKS_REQUIREPASS: ${KVROCKS_PASSWORD:-}
+    volumes:
+      # 持久化数据存储
+      - kvrocks-data:/var/lib/kvrocks/data
+      # 可选：挂载配置文件
+      - ./docker/kvrocks/kvrocks.conf:/etc/kvrocks/kvrocks.conf:ro
+    restart: unless-stopped
+    networks:
+      - katelyatv-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6666", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  # Kvrocks 数据卷
+  kvrocks-data:
+    driver: local
+
+networks:
+  katelyatv-network:
+    driver: bridge

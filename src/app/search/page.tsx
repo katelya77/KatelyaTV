@@ -3,8 +3,9 @@
 
 import { ChevronUp, Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 import {
   addSearchHistory,
   clearSearchHistory,
@@ -29,6 +30,15 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  
+  // 分组结果状态
+  const [groupedResults, setGroupedResults] = useState<{
+    regular: SearchResult[];
+    adult: SearchResult[];
+  } | null>(null);
+  
+  // 分组标签页状态
+  const [activeTab, setActiveTab] = useState<'regular' | 'adult'>('regular');
 
   // 获取默认聚合设置：只读取用户本地设置，默认为 true
   const getDefaultAggregate = () => {
@@ -45,11 +55,11 @@ function SearchPageClient() {
     return getDefaultAggregate() ? 'agg' : 'all';
   });
 
-  // 聚合后的结果（按标题和年份分组）
-  const aggregatedResults = useMemo(() => {
+  // 聚合函数
+  const aggregateResults = (results: SearchResult[]) => {
     const map = new Map<string, SearchResult[]>();
-    searchResults.forEach((item) => {
-      // 使用 title + year + type 作为键，year 必然存在，但依然兜底 'unknown'
+    results.forEach((item) => {
+      // 使用 title + year + type 作为键
       const key = `${item.title.replaceAll(' ', '')}-${
         item.year || 'unknown'
       }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
@@ -73,23 +83,21 @@ function SearchPageClient() {
       if (a[1][0].year === b[1][0].year) {
         return a[0].localeCompare(b[0]);
       } else {
-        // 处理 unknown 的情况
         const aYear = a[1][0].year;
         const bYear = b[1][0].year;
 
         if (aYear === 'unknown' && bYear === 'unknown') {
           return 0;
         } else if (aYear === 'unknown') {
-          return 1; // a 排在后面
+          return 1;
         } else if (bYear === 'unknown') {
-          return -1; // b 排在后面
+          return -1;
         } else {
-          // 都是数字年份，按数字大小排序（大的在前面）
           return aYear > bYear ? -1 : 1;
         }
       }
     });
-  }, [searchResults]);
+  };
 
   useEffect(() => {
     // 无搜索参数时聚焦搜索框
@@ -161,39 +169,54 @@ function SearchPageClient() {
   const fetchSearchResults = async (query: string) => {
     try {
       setIsLoading(true);
+      
+      // 获取用户认证信息
+      const authInfo = getAuthInfoFromBrowserCookie();
+      
+      // 构建请求头
+      const headers: HeadersInit = {};
+      if (authInfo?.username) {
+        headers['Authorization'] = `Bearer ${authInfo.username}`;
+      }
+      
+      // 简化的搜索请求 - 成人内容过滤现在在API层面自动处理
+      // 添加时间戳参数避免缓存问题
+      const timestamp = Date.now();
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}`
+        `/api/search?q=${encodeURIComponent(query.trim())}&t=${timestamp}`, 
+        { 
+          headers: {
+            ...headers,
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          }
+        }
       );
       const data = await response.json();
-      setSearchResults(
-        data.results.sort((a: SearchResult, b: SearchResult) => {
-          // 优先排序：标题与搜索词完全一致的排在前面
-          const aExactMatch = a.title === query.trim();
-          const bExactMatch = b.title === query.trim();
-
-          if (aExactMatch && !bExactMatch) return -1;
-          if (!aExactMatch && bExactMatch) return 1;
-
-          // 如果都匹配或都不匹配，则按原来的逻辑排序
-          if (a.year === b.year) {
-            return a.title.localeCompare(b.title);
-          } else {
-            // 处理 unknown 的情况
-            if (a.year === 'unknown' && b.year === 'unknown') {
-              return 0;
-            } else if (a.year === 'unknown') {
-              return 1; // a 排在后面
-            } else if (b.year === 'unknown') {
-              return -1; // b 排在后面
-            } else {
-              // 都是数字年份，按数字大小排序（大的在前面）
-              return parseInt(a.year) > parseInt(b.year) ? -1 : 1;
-            }
-          }
-        })
-      );
+      
+      // 处理新的搜索结果格式
+      if (data.regular_results || data.adult_results) {
+        // 处理分组结果
+        setGroupedResults({
+          regular: data.regular_results || [],
+          adult: data.adult_results || []
+        });
+        setSearchResults([...(data.regular_results || []), ...(data.adult_results || [])]);
+      } else if (data.grouped) {
+        // 兼容旧的分组格式
+        setGroupedResults({
+          regular: data.regular || [],
+          adult: data.adult || []
+        });
+        setSearchResults([...(data.regular || []), ...(data.adult || [])]);
+      } else {
+        // 兼容旧的普通结果格式
+        setGroupedResults(null);
+        setSearchResults(data.results || []);
+      }
+      
       setShowResults(true);
     } catch (error) {
+      setGroupedResults(null);
       setSearchResults([]);
     } finally {
       setIsLoading(false);
@@ -284,50 +307,100 @@ function SearchPageClient() {
                   </div>
                 </label>
               </div>
+              
+              {/* 如果有分组结果且有成人内容，显示分组标签 */}
+              {groupedResults && groupedResults.adult.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="inline-flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                      <button
+                        onClick={() => setActiveTab('regular')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                          activeTab === 'regular'
+                            ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                      >
+                        常规结果 ({groupedResults.regular.length})
+                      </button>
+                      <button
+                        onClick={() => setActiveTab('adult')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                          activeTab === 'adult'
+                            ? 'bg-white dark:bg-gray-700 text-red-600 dark:text-red-400 shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                        }`}
+                      >
+                        成人内容 ({groupedResults.adult.length})
+                      </button>
+                    </div>
+                  </div>
+                  {activeTab === 'adult' && (
+                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                      <p className="text-sm text-red-600 dark:text-red-400 text-center">
+                        ⚠️ 以下内容可能包含成人资源，请确保您已年满18周岁
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               <div
-                key={`search-results-${viewMode}`}
+                key={`search-results-${viewMode}-${activeTab}`}
                 className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
               >
-                {viewMode === 'agg'
-                  ? aggregatedResults.map(([mapKey, group]) => {
-                      return (
-                        <div key={`agg-${mapKey}`} className='w-full'>
-                          <VideoCard
-                            from='search'
-                            items={group}
-                            query={
-                              searchQuery.trim() !== group[0].title
-                                ? searchQuery.trim()
-                                : ''
-                            }
-                          />
-                        </div>
-                      );
-                    })
-                  : searchResults.map((item) => (
-                      <div
-                        key={`all-${item.source}-${item.id}`}
-                        className='w-full'
-                      >
+                {(() => {
+                  // 确定要显示的结果
+                  let displayResults = searchResults;
+                  if (groupedResults && groupedResults.adult.length > 0) {
+                    displayResults = activeTab === 'adult' 
+                      ? groupedResults.adult 
+                      : groupedResults.regular;
+                  }
+
+                  // 聚合显示模式
+                  if (viewMode === 'agg') {
+                    const aggregated = aggregateResults(displayResults);
+                    return aggregated.map(([mapKey, group]: [string, SearchResult[]]) => (
+                      <div key={`agg-${mapKey}`} className='w-full'>
                         <VideoCard
-                          id={item.id}
-                          title={item.title}
-                          poster={item.poster}
-                          episodes={item.episodes.length}
-                          source={item.source}
-                          source_name={item.source_name}
-                          douban_id={item.douban_id?.toString()}
+                          from='search'
+                          items={group}
                           query={
-                            searchQuery.trim() !== item.title
+                            searchQuery.trim() !== group[0].title
                               ? searchQuery.trim()
                               : ''
                           }
-                          year={item.year}
-                          from='search'
-                          type={item.episodes.length > 1 ? 'tv' : 'movie'}
                         />
                       </div>
-                    ))}
+                    ));
+                  }
+
+                  // 列表显示模式
+                  return displayResults.map((item) => (
+                    <div
+                      key={`all-${item.source}-${item.id}`}
+                      className='w-full'
+                    >
+                      <VideoCard
+                        id={item.id}
+                        title={item.title}
+                        poster={item.poster}
+                        episodes={item.episodes.length}
+                        source={item.source}
+                        source_name={item.source_name}
+                        douban_id={item.douban_id?.toString()}
+                        query={
+                          searchQuery.trim() !== item.title
+                            ? searchQuery.trim()
+                            : ''
+                        }
+                        year={item.year}
+                        from='search'
+                        type={item.episodes.length > 1 ? 'tv' : 'movie'}
+                      />
+                    </div>
+                  ));
+                })()}
                 {searchResults.length === 0 && (
                   <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
                     未找到相关结果

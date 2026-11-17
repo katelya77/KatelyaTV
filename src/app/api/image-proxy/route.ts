@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 
+import { addCorsHeaders, handleOptionsRequest } from '@/lib/cors';
+
 export const runtime = 'edge';
+
+// 处理OPTIONS预检请求（OrionTV客户端需要）
+export async function OPTIONS() {
+  return handleOptionsRequest();
+}
 
 // OrionTV 兼容接口
 export async function GET(request: Request) {
@@ -8,7 +15,8 @@ export async function GET(request: Request) {
   const imageUrl = searchParams.get('url');
 
   if (!imageUrl) {
-    return NextResponse.json({ error: 'Missing image URL' }, { status: 400 });
+    const response = NextResponse.json({ error: 'Missing image URL' }, { status: 400 });
+    return addCorsHeaders(response);
   }
 
   try {
@@ -21,19 +29,21 @@ export async function GET(request: Request) {
     });
 
     if (!imageResponse.ok) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: imageResponse.statusText },
         { status: imageResponse.status }
       );
+      return addCorsHeaders(response);
     }
 
     const contentType = imageResponse.headers.get('content-type');
 
     if (!imageResponse.body) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Image response has no body' },
         { status: 500 }
       );
+      return addCorsHeaders(response);
     }
 
     // 创建响应头
@@ -48,14 +58,16 @@ export async function GET(request: Request) {
     headers.set('Vercel-CDN-Cache-Control', 'public, s-maxage=15720000');
 
     // 直接返回图片流
-    return new Response(imageResponse.body, {
+    const response = new Response(imageResponse.body, {
       status: 200,
       headers,
     });
+    return addCorsHeaders(response);
   } catch (error) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Error fetching image' },
       { status: 500 }
     );
+    return addCorsHeaders(response);
   }
 }

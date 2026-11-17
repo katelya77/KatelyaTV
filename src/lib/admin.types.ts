@@ -22,6 +22,7 @@ export interface AdminConfig {
     detail?: string;
     from: 'config' | 'custom';
     disabled?: boolean;
+    is_adult?: boolean; // 新增：是否为成人内容资源站
   }[];
 }
 
